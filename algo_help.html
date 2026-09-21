@@ -1,0 +1,2085 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Algo Lab — sorting and searching, step by step</title>
+<meta name="description" content="Watch sorting and searching algorithms run, with the executing line of code highlighted in 24 programming languages.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f2f4fb; --surface:#ffffff; --surface-2:#eef1f9; --surface-3:#e5e9f6; --line:#dbe0f0;
+  --text:#0f1326; --muted:#565d80; --faint:#8a91b2;
+  --accent:#4a55e8; --accent-soft:#e6e8fd; --accent-line:#b9befa;
+  --sig-compare:#c9790a; --sig-swap:#dc2f57; --sig-locked:#0b9781;
+  --sig-pivot:#7440d6; --sig-key:#1180cf; --sig-out:#b4bad0;
+  --bar:#818af2; --bar-top:#5560ea;
+  --shadow:0 1px 2px rgba(15,19,38,.05),0 12px 28px -14px rgba(15,19,38,.2);
+  --radius:16px;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:"Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  --display:"Space Grotesk","Inter",system-ui,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#080b17; --surface:#111629; --surface-2:#181e34; --surface-3:#202741; --line:#252d4a;
+  --text:#e9edfb; --muted:#9ba3c6; --faint:#6c74a0;
+  --accent:#828bf9; --accent-soft:#1e2447; --accent-line:#39417a;
+  --sig-compare:#f2ad3c; --sig-swap:#ff6184; --sig-locked:#22c9ac;
+  --sig-pivot:#a98bff; --sig-key:#48b9ff; --sig-out:#333a5c;
+  --bar:#5a64d6; --bar-top:#828bf9;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 18px 40px -22px rgba(0,0,0,.9);
+}}
+:root[data-theme="dark"]{
+  --bg:#080b17; --surface:#111629; --surface-2:#181e34; --surface-3:#202741; --line:#252d4a;
+  --text:#e9edfb; --muted:#9ba3c6; --faint:#6c74a0;
+  --accent:#828bf9; --accent-soft:#1e2447; --accent-line:#39417a;
+  --sig-compare:#f2ad3c; --sig-swap:#ff6184; --sig-locked:#22c9ac;
+  --sig-pivot:#a98bff; --sig-key:#48b9ff; --sig-out:#333a5c;
+  --bar:#5a64d6; --bar-top:#828bf9;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 18px 40px -22px rgba(0,0,0,.9);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+::selection{background:var(--accent);color:#fff}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:8px;border:2px solid var(--surface)}
+
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;display:flex;align-items:center;gap:14px;
+  padding:11px clamp(12px,3vw,26px);background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:saturate(1.5) blur(12px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.mark{width:34px;height:34px;flex:none;border-radius:11px;background:linear-gradient(160deg,var(--surface-2),var(--surface));
+  border:1px solid var(--line);display:grid;place-items:center}
+.mark i{display:flex;align-items:flex-end;gap:2px;height:18px}
+.mark i b{width:3px;border-radius:2px;background:var(--bar-top);display:block}
+.brand h1{font-family:var(--display);font-size:16.5px;font-weight:700;margin:0;letter-spacing:-.01em;white-space:nowrap}
+.brand p{margin:0;font-size:11.5px;color:var(--muted);white-space:nowrap}
+.spacer{flex:1}
+.ghost{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);
+  border-radius:10px;padding:8px 12px;cursor:pointer;font-size:13px;font-weight:500;transition:.15s}
+.ghost:hover{border-color:var(--accent)}
+@media (max-width:640px){.brand p{display:none}}
+
+/* ---------- layout ---------- */
+.layout{display:grid;grid-template-columns:248px minmax(0,1fr);gap:clamp(12px,1.8vw,20px);
+  max-width:1680px;margin:0 auto;padding:clamp(12px,2vw,22px) clamp(12px,3vw,26px) 60px}
+@media (max-width:1080px){.layout{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+
+/* ---------- rail ---------- */
+.rail{position:sticky;top:calc(70px + env(safe-area-inset-top,0px));align-self:start;max-height:calc(100vh - 92px);overflow:auto}
+@media (max-width:1080px){.rail{position:static;max-height:none}}
+.filter{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:9px 12px;font-size:14px;margin-bottom:14px}
+.filter::placeholder{color:var(--faint)}
+.rail h2{font-family:var(--display);font-size:12px;font-weight:500;color:var(--muted);margin:0 0 7px 3px}
+.rail-group{margin-bottom:18px}
+.algo-list{display:flex;flex-direction:column;gap:4px}
+@media (max-width:1080px){.algo-list{flex-direction:row;overflow-x:auto;padding-bottom:6px}.algo-btn{flex:0 0 auto;min-width:160px}}
+.algo-btn{display:flex;align-items:baseline;gap:8px;width:100%;text-align:left;background:var(--surface);
+  border:1px solid var(--line);border-left:3px solid transparent;border-radius:10px;padding:8px 11px;cursor:pointer;transition:.14s}
+.algo-btn:hover{border-color:var(--accent-line);background:var(--surface-2)}
+.algo-btn b{font-weight:500;font-size:13.5px}
+.algo-btn i{font-style:normal;margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+.algo-btn[aria-current="true"]{border-color:var(--accent);border-left-color:var(--accent);background:var(--accent-soft)}
+.algo-btn[aria-current="true"] b{font-weight:600}
+.legend{border:1px solid var(--line);border-radius:14px;padding:12px 13px;background:var(--surface)}
+.legend ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.legend li{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:3px;flex:none}
+
+/* ---------- stage ---------- */
+.stage{min-width:0;display:flex;flex-direction:column;gap:clamp(12px,1.8vw,18px)}
+.head{padding:clamp(15px,2vw,22px) clamp(15px,2vw,24px)}
+.head h2{font-family:var(--display);font-size:clamp(20px,2.6vw,27px);font-weight:700;margin:0 0 6px;letter-spacing:-.02em}
+.head .idea{margin:0 0 13px;color:var(--muted);max-width:74ch;font-size:14.5px}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+.badge{font-family:var(--mono);font-size:11px;padding:4px 9px;border-radius:8px;background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.badge em{font-style:normal;color:var(--text);font-weight:500}
+.badge.ok{color:var(--sig-locked);border-color:color-mix(in srgb,var(--sig-locked) 35%,var(--line))}
+.badge.no{color:var(--sig-swap);border-color:color-mix(in srgb,var(--sig-swap) 35%,var(--line))}
+
+.split{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:clamp(12px,1.8vw,18px);align-items:start}
+@media (max-width:1240px){.split{grid-template-columns:1fr}}
+
+/* viz */
+.viz-wrap{padding:clamp(14px,2vw,20px) clamp(10px,1.6vw,18px) 0}
+.viz{height:clamp(190px,30vh,300px);display:flex;align-items:flex-end;justify-content:center;gap:clamp(1px,.4vw,5px);padding:22px 4px 0}
+.bar{flex:1 1 0;min-width:3px;background:var(--bar);border-radius:5px 5px 2px 2px;position:relative;cursor:pointer;
+  transition:height .17s cubic-bezier(.4,0,.2,1),background-color .12s,opacity .15s,transform .12s}
+.bar:hover{transform:translateY(-2px)}
+.bar .v{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:10px;color:var(--muted)}
+.bar.compare{background:var(--sig-compare)}
+.bar.swap{background:var(--sig-swap)}
+.bar.locked{background:var(--sig-locked)}
+.bar.pivot{background:var(--sig-pivot)}
+.bar.key{background:var(--sig-key)}
+.bar.out{background:var(--sig-out);opacity:.42}
+.bar.win{background:var(--bar-top)}
+.bar.sel{box-shadow:0 0 0 2px var(--text)}
+.marks{display:flex;gap:clamp(1px,.4vw,5px);padding:5px 4px 0;justify-content:center;min-height:17px}
+.marks span{flex:1 1 0;min-width:3px;text-align:center;font-family:var(--mono);font-size:9.5px;color:var(--accent);
+  overflow:visible;white-space:nowrap}
+
+/* cells */
+.cells{display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:7px;min-height:clamp(190px,26vh,280px);padding:10px 4px}
+.cell{width:50px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:opacity .18s}
+.cell .ptr{font-family:var(--mono);font-size:9.5px;color:var(--accent);height:13px;font-weight:700}
+.cell .box{width:100%;height:44px;display:grid;place-items:center;border-radius:10px;background:var(--surface-2);
+  border:1.5px solid var(--line);font-family:var(--mono);font-size:13.5px;font-weight:500;transition:.15s}
+.cell .ix{font-family:var(--mono);font-size:10px;color:var(--faint)}
+.cell:hover .box{border-color:var(--accent-line)}
+.cell.win .box{border-color:var(--accent-line);background:var(--accent-soft)}
+.cell.compare .box{background:var(--sig-compare);border-color:var(--sig-compare);color:#160f00}
+.cell.found .box{background:var(--sig-locked);border-color:var(--sig-locked);color:#001a16;transform:scale(1.07)}
+.cell.out{opacity:.26}
+.cell.out .box{border-style:dashed}
+.cell.sel .box{box-shadow:0 0 0 2px var(--text)}
+
+/* narration */
+.say{margin:14px clamp(14px,2vw,22px) 0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.say .what{padding:11px 13px;font-family:var(--mono);font-size:12.5px;line-height:1.5;background:var(--surface-2);min-height:42px;display:flex;align-items:center}
+.say .why{padding:10px 13px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);background:var(--surface)}
+.say .why b{color:var(--text);font-weight:600}
+.inspect{margin:10px clamp(14px,2vw,22px) 0;border:1px solid var(--accent-line);background:var(--accent-soft);
+  border-radius:12px;padding:11px 13px;font-size:13px;display:flex;gap:10px;align-items:flex-start}
+.inspect button{margin-left:auto;background:none;border:0;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0 2px}
+
+.scrub{padding:13px clamp(14px,2vw,22px) 0}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:20px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:99px;background:var(--surface-3)}
+input[type=range]::-moz-range-track{height:5px;border-radius:99px;background:var(--surface-3)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);margin-top:-5.5px}
+input[type=range]::-moz-range-thumb{width:15px;height:15px;border:2px solid var(--surface);border-radius:50%;background:var(--accent)}
+
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px clamp(14px,2vw,22px)}
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:10px;padding:8px 13px;border:1px solid var(--line);
+  background:var(--surface-2);cursor:pointer;font-size:13px;font-weight:500;transition:.14s}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;min-width:96px;justify-content:center}
+.btn.primary:hover{filter:brightness(1.09)}
+.btn.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.field{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+.field input[type=range]{width:92px}
+.field input[type=number],.field input[type=text]{background:var(--surface-2);border:1px solid var(--line);border-radius:9px;
+  padding:6px 9px;font-family:var(--mono);font-size:12.5px;width:70px}
+.field input.wide{width:min(210px,44vw)}
+.sep{width:1px;height:24px;background:var(--line)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));border-top:1px solid var(--line)}
+.stat{padding:11px clamp(11px,1.6vw,16px);border-right:1px solid var(--line)}
+.stat:last-child{border-right:0}
+.stat span{display:block;font-size:11px;color:var(--muted)}
+.stat strong{font-family:var(--mono);font-size:17px;font-weight:500;letter-spacing:-.02em}
+@media (max-width:560px){.stat{border-right:0;border-top:1px solid var(--line)}}
+
+/* code panel */
+.codecard{display:flex;flex-direction:column;min-width:0;position:sticky;top:calc(70px + env(safe-area-inset-top,0px))}
+@media (max-width:1240px){.codecard{position:static}}
+.codehead{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+select.lang{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13px;max-width:190px}
+.quick{display:flex;gap:4px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface-2);border-radius:99px;padding:5px 11px;cursor:pointer;font-size:12px;transition:.14s}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.codebody{overflow:auto;max-height:clamp(330px,56vh,640px);padding:10px 0 14px;background:var(--surface)}
+.cl{display:flex;gap:12px;padding:1px 14px 1px 0;font-family:var(--mono);font-size:12.5px;line-height:1.62;white-space:pre;
+  border-left:3px solid transparent;transition:background .12s}
+.cl .no{flex:none;width:34px;text-align:right;color:var(--faint);user-select:none;font-size:11px}
+.cl.live{background:var(--accent-soft);border-left-color:var(--accent)}
+.cl.clickable{cursor:pointer}
+.cl.clickable:hover{background:var(--surface-2)}
+.codefoot{padding:9px 14px;border-top:1px solid var(--line);font-size:11.5px;color:var(--faint);display:flex;gap:10px;align-items:center}
+.tok-kw{color:var(--sig-pivot)}
+.tok-str{color:var(--sig-locked)}
+.tok-com{color:var(--faint);font-style:italic}
+.tok-num{color:var(--sig-compare)}
+
+/* tabs */
+.tabs{display:flex;gap:2px;padding:6px 6px 0;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{border:0;background:transparent;padding:10px 15px;border-radius:9px 9px 0 0;cursor:pointer;font-size:14px;font-weight:500;
+  color:var(--muted);white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab:hover{color:var(--text)}
+.tab[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent)}
+.panel{padding:clamp(15px,2vw,24px)}
+.panel h3{font-family:var(--display);font-size:16px;margin:0 0 10px;font-weight:500}
+.panel h3:not(:first-child){margin-top:26px}
+.panel p{max-width:74ch;color:var(--muted);margin:0 0 12px}
+.steps{list-style:none;counter-reset:s;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+.steps li{counter-increment:s;display:flex;gap:11px;font-size:14.5px;max-width:74ch}
+.steps li::before{content:counter(s);flex:none;width:22px;height:22px;border-radius:7px;background:var(--accent-soft);
+  color:var(--accent);border:1px solid var(--accent-line);display:grid;place-items:center;font-family:var(--mono);font-size:11.5px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line)}
+th{font-weight:500;color:var(--muted);font-size:12px}
+td.mono,th.mono{font-family:var(--mono);font-size:12px}
+tr.me{background:var(--accent-soft)}
+tr.me td{font-weight:500}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:13px}
+.note{border:1px solid var(--line);border-radius:12px;padding:13px 14px;background:var(--surface-2)}
+.note h4{margin:0 0 7px;font-size:13px;font-weight:600}
+.note ul{margin:0;padding-left:17px;color:var(--muted);font-size:13.5px;display:flex;flex-direction:column;gap:5px}
+.quiz{display:flex;flex-direction:column;gap:14px;max-width:74ch}
+.q{border:1px solid var(--line);border-radius:12px;padding:14px 15px;background:var(--surface-2)}
+.q p{color:var(--text);margin:0 0 10px;font-weight:500}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opt{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:9px 12px;cursor:pointer;font-size:14px;transition:.14s}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.right{border-color:var(--sig-locked);background:color-mix(in srgb,var(--sig-locked) 14%,var(--surface))}
+.opt.wrong{border-color:var(--sig-swap);background:color-mix(in srgb,var(--sig-swap) 12%,var(--surface))}
+.opt:disabled{cursor:default}
+.verdict{margin:9px 0 0;font-size:13.5px;color:var(--muted)}
+footer{max-width:1680px;margin:0 auto;padding:0 clamp(12px,3vw,26px) 44px;color:var(--faint);font-size:12px;max-width:80ch}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="mark"><i><b style="height:7px"></b><b style="height:17px"></b><b style="height:11px"></b></i></div>
+    <div><h1>Algo Lab</h1><p>Watch it run, read the line that is running</p></div>
+  </div>
+  <div class="spacer"></div>
+  <button class="ghost" id="themeBtn">Light mode</button>
+</header>
+
+<main class="layout">
+  <aside class="rail">
+    <input class="filter" id="filter" type="search" placeholder="Find an algorithm" aria-label="Find an algorithm">
+    <div class="rail-group"><h2>Sorting</h2><div class="algo-list" id="listSort"></div></div>
+    <div class="rail-group"><h2>Searching</h2><div class="algo-list" id="listSearch"></div></div>
+    <div class="legend">
+      <h2 style="margin-bottom:9px">What the colours mean</h2>
+      <ul>
+        <li><i class="dot" style="background:var(--bar)"></i>Waiting its turn</li>
+        <li><i class="dot" style="background:var(--sig-compare)"></i>Being compared</li>
+        <li><i class="dot" style="background:var(--sig-swap)"></i>Being swapped or written</li>
+        <li><i class="dot" style="background:var(--sig-key)"></i>Held aside as the key</li>
+        <li><i class="dot" style="background:var(--sig-pivot)"></i>Pivot</li>
+        <li><i class="dot" style="background:var(--sig-locked)"></i>In final position</li>
+        <li><i class="dot" style="background:var(--sig-out)"></i>Ruled out</li>
+      </ul>
+      <p style="margin:11px 0 0;font-size:12px;color:var(--faint);line-height:1.5">Tap any bar or box to ask what it is doing right now.</p>
+    </div>
+  </aside>
+
+  <section class="stage">
+    <div class="card head">
+      <h2 id="algoName">Bubble sort</h2>
+      <p class="idea" id="algoIdea"></p>
+      <div class="badges" id="badges"></div>
+    </div>
+
+    <div class="split">
+      <div class="card">
+        <div class="viz-wrap"><div class="viz" id="viz"></div><div class="marks" id="marks"></div></div>
+        <div class="say">
+          <div class="what" id="narration">Press Play to start.</div>
+          <div class="why" id="why" hidden></div>
+        </div>
+        <div class="inspect" id="inspect" hidden><div id="inspectText"></div><button id="inspectClose" aria-label="Close">×</button></div>
+        <div class="scrub"><input type="range" id="scrub" min="0" max="0" value="0" aria-label="Step through the run"></div>
+        <div class="controls">
+          <button class="btn primary" id="playBtn">Play</button>
+          <button class="btn" id="prevBtn">Back</button>
+          <button class="btn" id="nextBtn">Step</button>
+          <button class="btn" id="resetBtn">Reset</button>
+          <button class="btn" id="explainBtn">Explain mode</button>
+          <div class="sep"></div>
+          <button class="btn" id="shuffleBtn">New array</button>
+          <label class="field">Size<input type="range" id="sizeR" min="6" max="60" value="22"><b id="sizeV" style="font-family:var(--mono);color:var(--text);font-weight:500">22</b></label>
+          <label class="field">Speed<input type="range" id="speedR" min="1" max="12" value="7"></label>
+          <div class="sep"></div>
+          <label class="field" id="targetField">Find<input type="number" id="targetIn" value="42"></label>
+          <label class="field">Your values<input type="text" id="customIn" class="wide" placeholder="34, 7, 23, 32, 5"></label>
+          <button class="btn" id="applyCustom">Use these</button>
+        </div>
+        <div class="stats">
+          <div class="stat"><span>Comparisons</span><strong id="stComp">0</strong></div>
+          <div class="stat"><span id="stSwapLabel">Swaps</span><strong id="stSwap">0</strong></div>
+          <div class="stat"><span>Reads &amp; writes</span><strong id="stAcc">0</strong></div>
+          <div class="stat"><span>Step</span><strong id="stStep">0 / 0</strong></div>
+        </div>
+      </div>
+
+      <div class="card codecard">
+        <div class="codehead">
+          <div class="quick" id="quickLangs"></div>
+          <div class="spacer"></div>
+          <select class="lang" id="langSel" aria-label="Language"></select>
+          <button class="btn" id="copyBtn">Copy</button>
+        </div>
+        <div class="codebody" id="codeBody"></div>
+        <div class="codefoot"><span id="codeFoot"></span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <nav class="tabs" role="tablist">
+        <button class="tab" role="tab" data-tab="how" aria-selected="true">How it works</button>
+        <button class="tab" role="tab" data-tab="cx" aria-selected="false">Complexity</button>
+        <button class="tab" role="tab" data-tab="quiz" aria-selected="false">Test yourself</button>
+      </nav>
+      <div class="panel" id="panelBody"></div>
+    </div>
+  </section>
+</main>
+
+<footer>Every run is the real algorithm executing on the array above, and every line of code is generated from one verified description of that algorithm — so the highlighted line really is the line doing the work.</footer>
+<script>
+/* =====================================================================
+   A tiny transpiler.
+   Each algorithm is written once as a structured description (the IR).
+   Each language supplies a profile saying how to spell loops, ifs,
+   declarations and array access. Every emitted line remembers which IR
+   node produced it, which is what lets the player highlight the running
+   line in whichever language is on screen.
+   ===================================================================== */
+
+/* ---------------- IR builders ---------------- */
+const Fn   = (name, params, ret, body) => ({k:"fn", name, params, ret, body});
+const Let  = (id, n, t, e)  => ({k:"let", id, n, t, e});
+const Asg  = (id, l, e)     => ({k:"set", id, l, e});
+const For  = (id, v, f, t, body) => ({k:"for", id, v, f, t, body});
+const Ford = (id, v, f, t, body) => ({k:"ford", id, v, f, t, body});
+const Wh   = (id, c, body)  => ({k:"while", id, c, body});
+const If   = (id, c, body, els) => ({k:"if", id, c, body, els});
+const Swp  = (id, x, y)     => ({k:"swap", id, x, y});
+const Ret  = (id, e)        => ({k:"ret", id, e});
+const Brk  = (id)           => ({k:"break", id});
+const Cm   = (text)         => ({k:"cm", text});
+const Call = (id, fn, args) => ({k:"call", id, fn, args});
+const NewA = (id, n, size)  => ({k:"newarr", id, n, size});
+const Free = (n)            => ({k:"free", n});
+
+/* ---------------- the algorithms ---------------- */
+const IR = {
+bubble:[Fn("bubbleSort",[["a","arr"]],"void",[
+  Let("init","n","int","LEN(a)"),
+  For("outer","i","0","n - 2",[
+    Let("outer","swapped","bool","false"),
+    Cm("after pass i the last i items are already final"),
+    For("inner","j","0","n - 2 - i",[
+      If("cmp","a[j] > a[j + 1]",[
+        Swp("swap","a[j]","a[j + 1]"),
+        Asg("swap","swapped","true")
+      ])
+    ]),
+    If("early","swapped == false",[ Cm("nothing moved, so the array is sorted"), Brk("early") ])
+  ])
+])],
+
+selection:[Fn("selectionSort",[["a","arr"]],"void",[
+  Let("init","n","int","LEN(a)"),
+  For("outer","i","0","n - 2",[
+    Let("pick","smallest","int","i"),
+    For("inner","j","i + 1","n - 1",[
+      If("cmp","a[j] < a[smallest]",[ Asg("newmin","smallest","j") ])
+    ]),
+    If("swapchk","smallest != i",[ Swp("swap","a[i]","a[smallest]") ])
+  ])
+])],
+
+insertion:[Fn("insertionSort",[["a","arr"]],"void",[
+  Let("init","n","int","LEN(a)"),
+  For("outer","i","1","n - 1",[
+    Let("take","key","int","a[i]"),
+    Let("take","j","int","i - 1"),
+    Wh("cmp","j >= 0",[
+      If("cmp","a[j] <= key",[ Brk("cmp") ]),
+      Cm("slide the bigger value one place right"),
+      Asg("shift","a[j + 1]","a[j]"),
+      Asg("shift","j","j - 1")
+    ]),
+    Asg("place","a[j + 1]","key")
+  ])
+])],
+
+merge:[
+Fn("mergeSort",[["a","arr"],["lo","int"],["hi","int"]],"void",[
+  If("base","lo >= hi",[ Ret("base","") ]),
+  Let("split","mid","int","lo + DIV(hi - lo ; 2)"),
+  Call("left","mergeSort",["a","lo","mid"]),
+  Call("right","mergeSort",["a","mid + 1","hi"]),
+  Call("merge","mergeTwo",["a","lo","mid","hi"])
+]),
+Fn("mergeTwo",[["a","arr"],["lo","int"],["mid","int"],["hi","int"]],"void",[
+  Let("copy","nl","int","mid - lo + 1"),
+  Let("copy","nr","int","hi - mid"),
+  NewA("copy","leftPart","nl"),
+  NewA("copy","rightPart","nr"),
+  For("copy","x","0","nl - 1",[ Asg("copy","leftPart[x]","a[lo + x]") ]),
+  For("copy","y","0","nr - 1",[ Asg("copy","rightPart[y]","a[mid + 1 + y]") ]),
+  Let("init2","i","int","0"),
+  Let("init2","j","int","0"),
+  Let("init2","k","int","lo"),
+  Wh("mloop","i < nl",[
+    If("mloop","j >= nr",[ Brk("mloop") ]),
+    If("cmp","leftPart[i] <= rightPart[j]",[
+      Cm("<= is what keeps merge sort stable"),
+      Asg("takeL","a[k]","leftPart[i]"),
+      Asg("takeL","i","i + 1")
+    ],[
+      Asg("takeR","a[k]","rightPart[j]"),
+      Asg("takeR","j","j + 1")
+    ]),
+    Asg("mloop","k","k + 1")
+  ]),
+  Wh("restL","i < nl",[ Asg("restL","a[k]","leftPart[i]"), Asg("restL","i","i + 1"), Asg("restL","k","k + 1") ]),
+  Wh("restR","j < nr",[ Asg("restR","a[k]","rightPart[j]"), Asg("restR","j","j + 1"), Asg("restR","k","k + 1") ]),
+  Free("leftPart"), Free("rightPart")
+])],
+
+quick:[Fn("quickSort",[["a","arr"],["lo","int"],["hi","int"]],"void",[
+  If("base","lo >= hi",[ Ret("base","") ]),
+  Let("pivot","pivot","int","a[hi]"),
+  Cm("Lomuto scheme: the last value is the pivot"),
+  Let("pivot","i","int","lo - 1"),
+  For("scan","j","lo","hi - 1",[
+    If("cmp","a[j] < pivot",[
+      Asg("grow","i","i + 1"),
+      Swp("grow","a[i]","a[j]")
+    ])
+  ]),
+  Swp("place","a[i + 1]","a[hi]"),
+  Let("place","p","int","i + 1"),
+  Call("recl","quickSort",["a","lo","p - 1"]),
+  Call("recr","quickSort",["a","p + 1","hi"])
+])],
+
+heap:[
+Fn("heapSort",[["a","arr"]],"void",[
+  Let("init","n","int","LEN(a)"),
+  Cm("build a max-heap: children of i live at 2i+1 and 2i+2"),
+  Ford("build","i","DIV(n ; 2) - 1","0",[ Call("build","siftDown",["a","n","i"]) ]),
+  Ford("extract","last","n - 1","1",[
+    Swp("extract","a[0]","a[last]"),
+    Call("repair","siftDown",["a","last","0"])
+  ])
+]),
+Fn("siftDown",[["a","arr"],["size","int"],["root","int"]],"void",[
+  Let("sift","largest","int","root"),
+  Let("sift","lc","int","2 * root + 1"),
+  Let("sift","rc","int","2 * root + 2"),
+  If("cmpl","lc < size",[ If("cmpl","a[lc] > a[largest]",[ Asg("cmpl","largest","lc") ]) ]),
+  If("cmpr","rc < size",[ If("cmpr","a[rc] > a[largest]",[ Asg("cmpr","largest","rc") ]) ]),
+  If("sswap","largest != root",[
+    Swp("sswap","a[root]","a[largest]"),
+    Call("sswap","siftDown",["a","size","largest"])
+  ])
+])],
+
+shell:[Fn("shellSort",[["a","arr"]],"void",[
+  Let("init","n","int","LEN(a)"),
+  Let("gap","gap","int","DIV(n ; 2)"),
+  Wh("gap","gap > 0",[
+    Cm("insertion sort on items that sit 'gap' apart"),
+    For("outer","i","gap","n - 1",[
+      Let("take","key","int","a[i]"),
+      Let("take","j","int","i"),
+      Wh("cmp","j >= gap",[
+        If("cmp","a[j - gap] <= key",[ Brk("cmp") ]),
+        Asg("shift","a[j]","a[j - gap]"),
+        Asg("shift","j","j - gap")
+      ]),
+      Asg("place","a[j]","key")
+    ]),
+    Asg("gap","gap","DIV(gap ; 2)")
+  ])
+])],
+
+counting:[Fn("countingSort",[["a","arr"]],"void",[
+  Let("init","n","int","LEN(a)"),
+  If("init","n == 0",[ Ret("init","") ]),
+  Let("range","lo","int","a[0]"),
+  Let("range","hi","int","a[0]"),
+  For("range","i","1","n - 1",[
+    If("range","a[i] < lo",[ Asg("range","lo","a[i]") ]),
+    If("range","a[i] > hi",[ Asg("range","hi","a[i]") ])
+  ]),
+  Let("range","span","int","hi - lo + 1"),
+  NewA("range","tally","span"),
+  NewA("range","output","n"),
+  Cm("1. count how many times each value appears"),
+  For("tally","p","0","n - 1",[
+    Let("tally","slot","int","a[p] - lo"),
+    Asg("tally","tally[slot]","tally[slot] + 1")
+  ]),
+  Cm("2. running totals say where each value's block ends"),
+  For("sums","v","1","span - 1",[ Asg("sums","tally[v]","tally[v] + tally[v - 1]") ]),
+  Cm("3. walk backwards so equal values keep their order"),
+  Ford("place","q","n - 1","0",[
+    Let("place","slot2","int","a[q] - lo"),
+    Asg("place","tally[slot2]","tally[slot2] - 1"),
+    Let("place","pos","int","tally[slot2]"),
+    Asg("place","output[pos]","a[q]")
+  ]),
+  For("back","w","0","n - 1",[ Asg("back","a[w]","output[w]") ]),
+  Free("tally"), Free("output")
+])],
+
+linear:[Fn("linearSearch",[["a","arr"],["target","int"]],"int",[
+  Let("init","n","int","LEN(a)"),
+  For("scan","i","0","n - 1",[
+    If("cmp","a[i] == target",[ Ret("hit","i") ])
+  ]),
+  Ret("miss","-1")
+])],
+
+binary:[Fn("binarySearch",[["a","arr"],["target","int"]],"int",[
+  Cm("the array must already be sorted"),
+  Let("init","lo","int","0"),
+  Let("init","hi","int","LEN(a) - 1"),
+  Wh("loop","lo <= hi",[
+    Let("mid","mid","int","lo + DIV(hi - lo ; 2)"),
+    If("cmp","a[mid] == target",[ Ret("hit","mid") ]),
+    If("right","a[mid] < target",[
+      Cm("target must be to the right"),
+      Asg("right","lo","mid + 1")
+    ],[
+      Cm("target must be to the left"),
+      Asg("left","hi","mid - 1")
+    ])
+  ]),
+  Ret("miss","-1")
+])],
+
+jump:[Fn("jumpSearch",[["a","arr"],["target","int"]],"int",[
+  Let("init","n","int","LEN(a)"),
+  Cm("block size = floor(sqrt(n)), found without a maths library"),
+  Let("step","step","int","1"),
+  Wh("step","(step + 1) * (step + 1) <= n",[ Asg("step","step","step + 1") ]),
+  Let("init2","prev","int","0"),
+  Let("init2","curr","int","0"),
+  Wh("hop","curr < n",[
+    Let("hop","edge","int","curr"),
+    If("hop","edge > n - 1",[ Asg("hop","edge","n - 1") ]),
+    If("cmpEdge","a[edge] >= target",[ Brk("cmpEdge") ]),
+    Asg("jump","prev","curr"),
+    Asg("jump","curr","curr + step")
+  ]),
+  Let("blk","last","int","curr"),
+  If("blk","last > n - 1",[ Asg("blk","last","n - 1") ]),
+  Cm("walk the one block the target must be in"),
+  For("walk","i","prev","last",[
+    If("cmp","a[i] == target",[ Ret("hit","i") ])
+  ]),
+  Ret("miss","-1")
+])],
+
+interpolation:[Fn("interpolationSearch",[["a","arr"],["target","int"]],"int",[
+  Let("init","lo","int","0"),
+  Let("init","hi","int","LEN(a) - 1"),
+  Wh("loop","lo <= hi",[
+    If("loop","target < a[lo]",[ Brk("loop") ]),
+    If("loop","target > a[hi]",[ Brk("loop") ]),
+    If("guard","a[lo] == a[hi]",[
+      If("guard","a[lo] == target",[ Ret("hit","lo") ]),
+      Brk("guard")
+    ]),
+    Cm("estimate the position instead of splitting in half"),
+    Let("guess","pos","int","lo + DIV((target - a[lo]) * (hi - lo) ; a[hi] - a[lo])"),
+    If("cmp","a[pos] == target",[ Ret("hit","pos") ]),
+    If("right","a[pos] < target",[ Asg("right","lo","pos + 1") ],[ Asg("left","hi","pos - 1") ])
+  ]),
+  Ret("miss","-1")
+])]
+};
+
+/* sample data used by every generated driver */
+const DEMO = {
+  sortArr:[64,34,25,12,22,11,90],
+  searchArr:[2,5,8,12,16,23,38,56,72,91],
+  target:23
+};
+/* ---------------- expression rendering ---------------- */
+function idxAdj(e, P){
+  if(!P.base1) return e;
+  const m = e.match(/^(.*?)\s*([+-])\s*(\d+)$/);
+  if(m){
+    const k = m[2] === "+" ? (+m[3] + 1) : (1 - +m[3]);
+    const head = m[1].trim();
+    if(k === 0) return head;
+    return head + (k > 0 ? " + " + k : " - " + (-k));
+  }
+  if(/^\d+$/.test(e)) return String(+e + 1);
+  return e + " + 1";
+}
+function EX(s, P){
+  if(s === "" || s == null) return "";
+  const ph = [];
+  const put = t => { ph.push(t); return "\u0001" + (ph.length - 1) + "\u0001"; };
+  let guard = 0;
+  while(s.indexOf("DIV(") >= 0 && guard++ < 20){
+    s = s.replace(/DIV\(((?:[^()]|\([^()]*\))*?)\s*;\s*((?:[^()]|\([^()]*\))*?)\)/,
+      (m, x, y) => put(P.divT(EX(x.trim(), P), EX(y.trim(), P))));
+  }
+  s = s.replace(/LEN\(([a-zA-Z_]\w*)\)/g, (m, a) => put(P.lenT(P.sig(a))));
+  s = s.replace(/\b([a-zA-Z_]\w*)\[([^\[\]]+)\]/g,
+    (m, a, i) => put(P.idxT(P.sig(a), idxAdj(EX(i, P), P))));
+  s = s.replace(/!=/g, "\u0002").replace(/==/g, "\u0003").replace(/&&/g, "\u0004").replace(/\|\|/g, "\u0005");
+  s = s.replace(/\u0002/g, P.neqL).replace(/\u0003/g, P.eqL).replace(/\u0004/g, P.andL).replace(/\u0005/g, P.orL);
+  s = s.replace(/\b([a-zA-Z_]\w*)\b(?!\s*\()/g, (m, id) =>
+    id === "true" ? P.trueL : id === "false" ? P.falseL : P.sig(id));
+  return s.replace(/\u0001(\d+)\u0001/g, (m, i) => ph[+i]);
+}
+
+/* ---------------- profile defaults (C-family) ---------------- */
+const BASE = {
+  base1:false, ind:"    ", cmt:"//", term:";", baseDepth:0,
+  declTop:false, valueArrays:false, sizeParam:false, mainFirst:false,
+  needTailReturn:false, argPrefix:"",
+  ty:{int:"int", bool:"bool", arr:"int[]", void:"void"},
+  trueL:"true", falseL:"false", andL:"&&", orL:"||", eqL:"==", neqL:"!=", asg:"=",
+  sig:x => x, name:x => x,
+  idxT:(a,i) => a + "[" + i + "]",
+  lenT:a => a + ".length",
+  divT:(x,y) => "(" + x + ") / (" + y + ")",
+  wrapPre:() => [], wrapPost:() => [],
+  fnOpen:(P,name,params,ret) => [P.ty[ret] + " " + P.name(name) + "(" +
+      params.map(p => P.ty[p[1]] + " " + p[0]).join(", ") + ") {"],
+  fnClose:() => ["}"],
+  forOpen:(P,v,f,t,dir) => dir === "up"
+    ? "for (" + P.ty.int + " " + v + " = " + f + "; " + v + " <= " + t + "; " + v + "++) {"
+    : "for (" + P.ty.int + " " + v + " = " + f + "; " + v + " >= " + t + "; " + v + "--) {",
+  forClose:() => ["}"],
+  whOpen:(P,c) => "while (" + c + ") {",
+  whClose:() => ["}"],
+  ifOpen:(P,c) => "if (" + c + ") {",
+  elseLine:() => "} else {",
+  ifClose:() => ["}"],
+  letT:(P,n,t,e) => P.ty[t] + " " + n + " = " + e + P.term,
+  setT:(P,l,e) => l + " " + P.asg + " " + e + P.term,
+  swapT:(P,x,y,tmp) => [P.ty.int + " " + tmp + " = " + x + P.term, x + " = " + y + P.term, y + " = " + tmp + P.term],
+  swapDeclare:true,
+  retT:(P,e) => e == null ? "return" + P.term : "return " + e + P.term,
+  brkT:(P,ctx) => "break" + P.term,
+  callT:(P,fn,args) => P.name(fn) + "(" + args.join(", ") + ")" + P.term,
+  newArrT:(P,n,size) => P.ty.arr + " " + n + " = new " + P.ty.int + "[" + size + "]" + P.term,
+  freeT:() => null,
+  declBlock:() => []
+};
+const mk = o => Object.assign({}, BASE, o);
+const snake = x => x.replace(/([a-z])([A-Z])/g, "$1_$2").toLowerCase();
+const lit = a => a.join(", ");
+
+/* ---------------- the languages ---------------- */
+const LANG = {
+
+python: mk({ label:"Python", ext:"py", cmt:"#", term:"", ind:"    ", name:snake,
+  trueL:"True", falseL:"False", andL:"and", orL:"or",
+  divT:(x,y) => "(" + x + ") // (" + y + ")", lenT:a => "len(" + a + ")",
+  fnOpen:(P,n,ps) => ["def " + P.name(n) + "(" + ps.map(p => p[0]).join(", ") + "):"],
+  fnClose:() => [],
+  forOpen:(P,v,f,t,d) => d === "up" ? "for " + v + " in range(" + f + ", (" + t + ") + 1):"
+                                    : "for " + v + " in range(" + f + ", (" + t + ") - 1, -1):",
+  forClose:() => [], whOpen:(P,c) => "while " + c + ":", whClose:() => [],
+  ifOpen:(P,c) => "if " + c + ":", elseLine:() => "else:", ifClose:() => [],
+  letT:(P,n,t,e) => n + " = " + e, setT:(P,l,e) => l + " = " + e,
+  swapT:(P,x,y) => [x + ", " + y + " = " + y + ", " + x], swapDeclare:false,
+  retT:(P,e) => e == null ? "return" : "return " + e,
+  brkT:() => "break", callT:(P,fn,args) => P.name(fn) + "(" + args.join(", ") + ")",
+  newArrT:(P,n,size) => n + " = [0] * (" + size + ")",
+  main:(P,F,srch) => srch
+    ? ["", "data = [" + lit(DEMO.searchArr) + "]", "print(" + P.name(F) + "(data, " + DEMO.target + "))"]
+    : ["", "data = [" + lit(DEMO.sortArr) + "]", P.name(F) + "(data" + (F === "mergeSort" || F === "quickSort" ? ", 0, len(data) - 1" : "") + ")", "print(data)"] }),
+
+java: mk({ label:"Java", ext:"java", baseDepth:1, ty:{int:"int",bool:"boolean",arr:"int[]",void:"void"},
+  wrapPre:() => ["public class Demo {"], wrapPost:() => ["}"],
+  fnOpen:(P,n,ps,r) => ["static " + P.ty[r] + " " + n + "(" + ps.map(p => P.ty[p[1]] + " " + p[0]).join(", ") + ") {"],
+  main:(P,F,srch) => ["", "public static void main(String[] args) {",
+    srch ? "    int[] data = {" + lit(DEMO.searchArr) + "};" : "    int[] data = {" + lit(DEMO.sortArr) + "};",
+    srch ? "    System.out.println(" + F + "(data, " + DEMO.target + "));"
+         : "    " + F + "(data" + (F === "mergeSort" || F === "quickSort" ? ", 0, data.length - 1" : "") + ");",
+    srch ? "}" : "    System.out.println(java.util.Arrays.toString(data));", srch ? "" : "}"].filter(x => x !== "") }),
+
+c: mk({ label:"C", ext:"c", sizeParam:true, proto:true, ty:{int:"int",bool:"int",arr:"int",void:"void"},
+  trueL:"1", falseL:"0", lenT:() => "n",
+  wrapPre:() => ["#include <stdio.h>", "#include <stdlib.h>", ""],
+  fnOpen:(P,n,ps,r) => [P.ty[r] + " " + n + "(" + ps.map(p => p[1] === "arr" ? "int " + p[0] + "[]" : "int " + p[0]).join(", ") + ") {"],
+  newArrT:(P,n,size) => "int *" + n + " = (int*)calloc((" + size + "), sizeof(int))" + P.term,
+  freeT:(P,n) => "free(" + n + ");",
+  main:(P,F,srch) => ["", "int main(void) {",
+    "    int data[] = {" + lit(srch ? DEMO.searchArr : DEMO.sortArr) + "};",
+    "    int n = sizeof(data) / sizeof(data[0]);",
+    srch ? "    printf(\"%d\\n\", " + F + "(data, n, " + DEMO.target + "));"
+         : "    " + F + "(data" + (F === "mergeSort" || F === "quickSort" ? ", 0, n - 1" : ", n") + ");",
+    srch ? "    return 0;" : "    for (int i = 0; i < n; i++) printf(\"%d \", data[i]);",
+    srch ? "}" : "    return 0;", srch ? "" : "}"].filter(x => x !== "") }),
+
+cpp: mk({ label:"C++", ext:"cpp", proto:true, ty:{int:"int",bool:"bool",arr:"vector<int>&",void:"void"},
+  lenT:a => "(int)" + a + ".size()",
+  wrapPre:() => ["#include <iostream>", "#include <vector>", "using namespace std;", ""],
+  swapT:(P,x,y) => ["swap(" + x + ", " + y + ");"], swapDeclare:false,
+  newArrT:(P,n,size) => "vector<int> " + n + "(" + size + ", 0);",
+  main:(P,F,srch) => ["", "int main() {",
+    "    vector<int> data = {" + lit(srch ? DEMO.searchArr : DEMO.sortArr) + "};",
+    srch ? "    cout << " + F + "(data, " + DEMO.target + ") << endl;"
+         : "    " + F + "(data" + (F === "mergeSort" || F === "quickSort" ? ", 0, data.size() - 1" : "") + ");",
+    srch ? "}" : "    for (int x : data) cout << x << \" \";", srch ? "" : "}"].filter(x => x !== "") }),
+
+csharp: mk({ label:"C#", ext:"cs", baseDepth:1, ty:{int:"int",bool:"bool",arr:"int[]",void:"void"},
+  wrapPre:() => ["using System;", "", "class Demo {"], wrapPost:() => ["}"],
+  fnOpen:(P,n,ps,r) => ["static " + P.ty[r] + " " + n + "(" + ps.map(p => P.ty[p[1]] + " " + p[0]).join(", ") + ") {"],
+  main:(P,F,srch) => ["", "static void Main() {",
+    "    int[] data = {" + lit(srch ? DEMO.searchArr : DEMO.sortArr) + "};",
+    srch ? "    Console.WriteLine(" + F + "(data, " + DEMO.target + "));"
+         : "    " + F + "(data" + (F === "mergeSort" || F === "quickSort" ? ", 0, data.Length - 1" : "") + ");",
+    srch ? "}" : "    Console.WriteLine(string.Join(\", \", data));", srch ? "" : "}"].filter(x => x !== "") }),
+
+javascript: mk({ label:"JavaScript", ext:"js", ty:{int:"let",bool:"let",arr:"",void:""},
+  divT:(x,y) => "Math.floor((" + x + ") / (" + y + "))",
+  fnOpen:(P,n,ps) => ["function " + n + "(" + ps.map(p => p[0]).join(", ") + ") {"],
+  letT:(P,n,t,e) => "let " + n + " = " + e + ";",
+  swapT:(P,x,y) => ["[" + x + ", " + y + "] = [" + y + ", " + x + "];"], swapDeclare:false,
+  forOpen:(P,v,f,t,d) => d === "up" ? "for (let " + v + " = " + f + "; " + v + " <= " + t + "; " + v + "++) {"
+                                    : "for (let " + v + " = " + f + "; " + v + " >= " + t + "; " + v + "--) {",
+  newArrT:(P,n,size) => "const " + n + " = new Array(" + size + ").fill(0);",
+  main:(P,F,srch) => ["", "const data = [" + lit(srch ? DEMO.searchArr : DEMO.sortArr) + "];",
+    srch ? "console.log(" + F + "(data, " + DEMO.target + "));"
+         : F + "(data" + (F === "mergeSort" || F === "quickSort" ? ", 0, data.length - 1" : "") + ");",
+    srch ? "" : "console.log(data);"].filter(x => x !== "") }),
+
+typescript: mk({ label:"TypeScript", ext:"ts", ty:{int:"let",bool:"let",arr:"number[]",void:"void"},
+  divT:(x,y) => "Math.floor((" + x + ") / (" + y + "))",
+  fnOpen:(P,n,ps,r) => ["function " + n + "(" + ps.map(p => p[0] + ": " + (p[1] === "arr" ? "number[]" : "number")).join(", ") +
+      "): " + (r === "int" ? "number" : "void") + " {"],
+  letT:(P,n,t,e) => "let " + n + ": " + (t === "bool" ? "boolean" : "number") + " = " + e + ";",
+  swapT:(P,x,y) => ["[" + x + ", " + y + "] = [" + y + ", " + x + "];"], swapDeclare:false,
+  forOpen:(P,v,f,t,d) => d === "up" ? "for (let " + v + " = " + f + "; " + v + " <= " + t + "; " + v + "++) {"
+                                    : "for (let " + v + " = " + f + "; " + v + " >= " + t + "; " + v + "--) {",
+  newArrT:(P,n,size) => "const " + n + ": number[] = new Array(" + size + ").fill(0);",
+  main:(P,F,srch) => ["", "const data: number[] = [" + lit(srch ? DEMO.searchArr : DEMO.sortArr) + "];",
+    srch ? "console.log(" + F + "(data, " + DEMO.target + "));"
+         : F + "(data" + (F === "mergeSort" || F === "quickSort" ? ", 0, data.length - 1" : "") + ");",
+    srch ? "" : "console.log(data);"].filter(x => x !== "") }),
+
+go: mk({ label:"Go", ext:"go", ty:{int:"int",bool:"bool",arr:"[]int",void:""},
+  lenT:a => "len(" + a + ")",
+  wrapPre:() => ["package main", "", "import \"fmt\"", ""],
+  fnOpen:(P,n,ps,r) => ["func " + n + "(" + ps.map(p => p[0] + " " + P.ty[p[1]]).join(", ") + ")" + (r === "int" ? " int" : "") + " {"],
+  letT:(P,n,t,e) => n + " := " + e,
+  setT:(P,l,e) => l + " = " + e, term:"",
+  swapT:(P,x,y) => [x + ", " + y + " = " + y + ", " + x], swapDeclare:false,
+  forOpen:(P,v,f,t,d) => d === "up" ? "for " + v + " := " + f + "; " + v + " <= " + t + "; " + v + "++ {"
+                                    : "for " + v + " := " + f + "; " + v + " >= " + t + "; " + v + "-- {",
+  whOpen:(P,c) => "for " + c + " {", ifOpen:(P,c) => "if " + c + " {",
+  retT:(P,e) => e == null ? "return" : "return " + e, brkT:() => "break",
+  callT:(P,fn,args) => fn + "(" + args.join(", ") + ")",
+  newArrT:(P,n,size) => n + " := make([]int, " + size + ")",
+  main:(P,F,srch) => ["", "func main() {",
+    "    data := []int{" + lit(srch ? DEMO.searchArr : DEMO.sortArr) + "}",
+    srch ? "    fmt.Println(" + F + "(data, " + DEMO.target + "))"
+         : "    " + F + "(data" + (F === "mergeSort" || F === "quickSort" ? ", 0, len(data)-1" : "") + ")",
+    srch ? "}" : "    fmt.Println(data)", srch ? "" : "}"].filter(x => x !== "") }),
+
+rust: mk({ label:"Rust", ext:"rs", name:snake,
+  idxT:(a,i) => a + "[(" + i + ") as usize]", lenT:a => a + ".len() as i32",
+  fnOpen:(P,n,ps,r) => ["fn " + P.name(n) + "(" + ps.map(p => p[1] === "arr" ? p[0] + ": &mut Vec<i32>" : p[0] + ": i32").join(", ") +
+      ")" + (r === "int" ? " -> i32" : "") + " {"],
+  letT:(P,n,t,e,m) => "let " + (m ? "mut " : "") + n + ": " + (t === "bool" ? "bool" : "i32") + " = " + e + ";",
+  swapT:(P,x,y) => [x.replace(/\[\((.*)\) as usize\]$/, "") + ".swap((" +
+      x.match(/\[\((.*)\) as usize\]$/)[1] + ") as usize, (" + y.match(/\[\((.*)\) as usize\]$/)[1] + ") as usize);"],
+  swapDeclare:false,
+  forOpen:(P,v,f,t,d) => d === "up" ? "for " + v + " in (" + f + ")..=(" + t + ") {"
+                                    : "for " + v + " in ((" + t + ")..=(" + f + ")).rev() {",
+  newArrT:(P,n,size) => "let mut " + n + ": Vec<i32> = vec![0; (" + size + ") as usize];",
+  main:(P,F,srch) => ["", "fn main() {",
+    "    let mut data: Vec<i32> = vec![" + lit(srch ? DEMO.searchArr : DEMO.sortArr) + "];",
+    srch ? "    println!(\"{}\", " + P.name(F) + "(&mut data, " + DEMO.target + "));"
+         : "    let hi = data.len() as i32 - 1;",
+    srch ? "}" : "    " + P.name(F) + "(&mut data" + (F === "mergeSort" || F === "quickSort" ? ", 0, hi" : "") + ");",
+    srch ? "" : "    println!(\"{:?}\", data);", srch ? "" : "}"].filter(x => x !== "") }),
+
+kotlin: mk({ label:"Kotlin", ext:"kt", ty:{int:"Int",bool:"Boolean",arr:"IntArray",void:""},
+  lenT:a => a + ".size",
+  fnOpen:(P,n,ps,r) => ["fun " + n + "(" + ps.map(p => p[0] + ": " + P.ty[p[1]]).join(", ") + ")" + (r === "int" ? ": Int" : "") + " {"],
+  letT:(P,n,t,e,m) => (m ? "var " : "val ") + n + " = " + e, term:"", setT:(P,l,e) => l + " = " + e,
+  forOpen:(P,v,f,t,d) => d === "up" ? "for (" + v + " in (" + f + ")..(" + t + ")) {"
+                                    : "for (" + v + " in (" + f + ") downTo (" + t + ")) {",
+  retT:(P,e) => e == null ? "return" : "return " + e,
+  callT:(P,fn,args) => fn + "(" + args.join(", ") + ")",
+  newArrT:(P,n,size) => "val " + n + " = IntArray(" + size + ")",
+  main:(P,F,srch) => ["", "fun main() {",
+    "    val data = intArrayOf(" + lit(srch ? DEMO.searchArr : DEMO.sortArr) + ")",
+    srch ? "    println(" + F + "(data, " + DEMO.target + "))"
+         : "    " + F + "(data" + (F === "mergeSort" || F === "quickSort" ? ", 0, data.size - 1" : "") + ")",
+    srch ? "}" : "    println(data.joinToString(\", \"))", srch ? "" : "}"].filter(x => x !== "") }),
+
+swift: mk({ label:"Swift", ext:"swift", ty:{int:"Int",bool:"Bool",arr:"inout [Int]",void:""}, argPrefix:"&",
+  lenT:a => a + ".count",
+  fnOpen:(P,n,ps,r) => ["func " + n + "(_ " + ps.map(p => p[0] + ": " + P.ty[p[1]]).join(", _ ") + ")" + (r === "int" ? " -> Int" : "") + " {"],
+  letT:(P,n,t,e,m) => (m ? "var " : "let ") + n + " = " + e, term:"", setT:(P,l,e) => l + " = " + e,
+  swapT:(P,x,y) => ["let tmpS = " + x, x + " = " + y, y + " = tmpS"], swapDeclare:false,
+  forOpen:(P,v,f,t,d) => d === "up" ? "for " + v + " in stride(from: " + f + ", through: " + t + ", by: 1) {"
+                                    : "for " + v + " in stride(from: " + f + ", through: " + t + ", by: -1) {",
+  retT:(P,e) => e == null ? "return" : "return " + e,
+  callT:(P,fn,args) => fn + "(" + args.map((x,i) => i === 0 && x === "a" ? "&a" : x).join(", ") + ")",
+  newArrT:(P,n,size) => "var " + n + " = [Int](repeating: 0, count: " + size + ")",
+  main:(P,F,srch) => ["", "var data = [" + lit(srch ? DEMO.searchArr : DEMO.sortArr) + "]",
+    srch ? "print(" + F + "(&data, " + DEMO.target + "))"
+         : F + "(&data" + (F === "mergeSort" || F === "quickSort" ? ", 0, data.count - 1" : "") + ")",
+    srch ? "" : "print(data)"].filter(x => x !== "") }),
+
+php: mk({ label:"PHP", ext:"php", sig:x => /^\d/.test(x) ? x : "$" + x,
+  lenT:a => "count(" + a + ")", divT:(x,y) => "intdiv(" + x + ", " + y + ")",
+  wrapPre:() => ["<?php", ""],
+  fnOpen:(P,n,ps) => ["function " + n + "(" + ps.map(p => (p[1] === "arr" ? "array &$" : "int $") + p[0]).join(", ") + ") {"],
+  letT:(P,n,t,e) => "$" + n + " = " + e + ";", setT:(P,l,e) => l + " = " + e + ";",
+  swapT:(P,x,y) => ["[" + x + ", " + y + "] = [" + y + ", " + x + "];"], swapDeclare:false,
+  forOpen:(P,v,f,t,d) => d === "up" ? "for ($" + v + " = " + f + "; $" + v + " <= " + t + "; $" + v + "++) {"
+                                    : "for ($" + v + " = " + f + "; $" + v + " >= " + t + "; $" + v + "--) {",
+  callT:(P,fn,args) => fn + "(" + args.map(x => x).join(", ") + ");",
+  newArrT:(P,n,size) => "$" + n + " = array_fill(0, max(0, " + size + "), 0);",
+  main:(P,F,srch) => ["", "$data = [" + lit(srch ? DEMO.searchArr : DEMO.sortArr) + "];",
+    srch ? "echo " + F + "($data, " + DEMO.target + "), \"\\n\";"
+         : F + "($data" + (F === "mergeSort" || F === "quickSort" ? ", 0, count($data) - 1" : "") + ");",
+    srch ? "" : "echo implode(\", \", $data), \"\\n\";"].filter(x => x !== "") }),
+
+ruby: mk({ label:"Ruby", ext:"rb", cmt:"#", term:"", ind:"  ", name:snake,
+  lenT:a => a + ".length", divT:(x,y) => "(" + x + ") / (" + y + ")",
+  fnOpen:(P,n,ps) => ["def " + P.name(n) + "(" + ps.map(p => p[0]).join(", ") + ")"],
+  fnClose:() => ["end"],
+  forOpen:(P,v,f,t,d) => d === "up" ? "(" + f + ").upto(" + t + ") do |" + v + "|"
+                                    : "(" + f + ").downto(" + t + ") do |" + v + "|",
+  forClose:() => ["end"], whOpen:(P,c) => "while " + c, whClose:() => ["end"],
+  ifOpen:(P,c) => "if " + c, elseLine:() => "else", ifClose:() => ["end"],
+  letT:(P,n,t,e) => n + " = " + e, setT:(P,l,e) => l + " = " + e,
+  swapT:(P,x,y) => [x + ", " + y + " = " + y + ", " + x], swapDeclare:false,
+  retT:(P,e) => e == null ? "return" : "return " + e, brkT:() => "break",
+  callT:(P,fn,args) => P.name(fn) + "(" + args.join(", ") + ")",
+  newArrT:(P,n,size) => n + " = Array.new([0, " + size + "].max, 0)",
+  main:(P,F,srch) => ["", "data = [" + lit(srch ? DEMO.searchArr : DEMO.sortArr) + "]",
+    srch ? "puts " + P.name(F) + "(data, " + DEMO.target + ")"
+         : P.name(F) + "(data" + (F === "mergeSort" || F === "quickSort" ? ", 0, data.length - 1" : "") + ")",
+    srch ? "" : "p data"].filter(x => x !== "") }),
+
+dart: mk({ label:"Dart", ext:"dart", ty:{int:"int",bool:"bool",arr:"List<int>",void:"void"},
+  lenT:a => a + ".length", divT:(x,y) => "(" + x + ") ~/ (" + y + ")",
+  fnOpen:(P,n,ps,r) => [P.ty[r] + " " + n + "(" + ps.map(p => P.ty[p[1]] + " " + p[0]).join(", ") + ") {"],
+  newArrT:(P,n,size) => "List<int> " + n + " = List<int>.filled(" + size + " < 0 ? 0 : " + size + ", 0);",
+  main:(P,F,srch) => ["", "void main() {",
+    "    List<int> data = [" + lit(srch ? DEMO.searchArr : DEMO.sortArr) + "];",
+    srch ? "    print(" + F + "(data, " + DEMO.target + "));"
+         : "    " + F + "(data" + (F === "mergeSort" || F === "quickSort" ? ", 0, data.length - 1" : "") + ");",
+    srch ? "}" : "    print(data);", srch ? "" : "}"].filter(x => x !== "") }),
+
+scala: mk({ label:"Scala", ext:"scala", baseDepth:1, ty:{int:"Int",bool:"Boolean",arr:"Array[Int]",void:"Unit"},
+  lenT:a => a + ".length",
+  wrapPre:() => ["object Demo {"], wrapPost:() => ["}"],
+  fnOpen:(P,n,ps,r) => ["def " + n + "(" + ps.map(p => p[0] + ": " + P.ty[p[1]]).join(", ") + "): " + (r === "int" ? "Int" : "Unit") + " = {"],
+  letT:(P,n,t,e,m) => (m ? "var " : "val ") + n + " = " + e, term:"", setT:(P,l,e) => l + " = " + e,
+  forOpen:(P,v,f,t,d) => d === "up" ? "for (" + v + " <- (" + f + ") to (" + t + ")) {"
+                                    : "for (" + v + " <- (" + f + ") to (" + t + ") by -1) {",
+  retT:(P,e) => e == null ? "return" : "return " + e,
+  callT:(P,fn,args) => fn + "(" + args.join(", ") + ")",
+  newArrT:(P,n,size) => "val " + n + " = new Array[Int](math.max(0, " + size + "))",
+  main:(P,F,srch) => ["", "def main(args: Array[String]): Unit = {",
+    "    val data = Array(" + lit(srch ? DEMO.searchArr : DEMO.sortArr) + ")",
+    srch ? "    println(" + F + "(data, " + DEMO.target + "))"
+         : "    " + F + "(data" + (F === "mergeSort" || F === "quickSort" ? ", 0, data.length - 1" : "") + ")",
+    srch ? "}" : "    println(data.mkString(\", \"))", srch ? "" : "}"].filter(x => x !== "") }),
+
+perl: mk({ label:"Perl", ext:"pl", cmt:"#", sig:x => /^\d/.test(x) ? x : "$" + x,
+  trueL:"1", falseL:"0",
+  idxT:(a,i) => a + "->[" + i + "]", lenT:a => "scalar(@{" + a + "})",
+  divT:(x,y) => "int((" + x + ") / (" + y + "))",
+  wrapPre:() => ["use strict;", "use warnings;", ""],
+  fnOpen:(P,n,ps) => ["sub " + n + " {", "    my (" + ps.map(p => "$" + p[0]).join(", ") + ") = @_;"],
+  letT:(P,n,t,e) => "my $" + n + " = " + e + ";", setT:(P,l,e) => l + " = " + e + ";",
+  swapT:(P,x,y) => ["(" + x + ", " + y + ") = (" + y + ", " + x + ");"], swapDeclare:false,
+  forOpen:(P,v,f,t,d) => d === "up" ? "for (my $" + v + " = " + f + "; $" + v + " <= " + t + "; $" + v + "++) {"
+                                    : "for (my $" + v + " = " + f + "; $" + v + " >= " + t + "; $" + v + "--) {",
+  brkT:() => "last;",
+  callT:(P,fn,args) => fn + "(" + args.join(", ") + ");",
+  newArrT:(P,n,size) => "my $" + n + " = [ (0) x (" + size + " < 0 ? 0 : " + size + ") ];",
+  main:(P,F,srch) => ["", "my $data = [" + lit(srch ? DEMO.searchArr : DEMO.sortArr) + "];",
+    srch ? "print " + F + "($data, " + DEMO.target + "), \"\\n\";"
+         : F + "($data" + (F === "mergeSort" || F === "quickSort" ? ", 0, scalar(@$data) - 1" : "") + ");",
+    srch ? "" : "print join(\", \", @$data), \"\\n\";"].filter(x => x !== "") }),
+
+lua: mk({ label:"Lua", ext:"lua", cmt:"--", term:"", base1:true, ind:"  ",
+  neqL:"~=", lenT:a => "#" + a, divT:(x,y) => "math.floor((" + x + ") / (" + y + "))",
+  fnOpen:(P,n,ps) => ["function " + n + "(" + ps.map(p => p[0]).join(", ") + ")"],
+  fnClose:() => ["end"],
+  forOpen:(P,v,f,t,d) => d === "up" ? "for " + v + " = " + f + ", " + t + " do"
+                                    : "for " + v + " = " + f + ", " + t + ", -1 do",
+  forClose:() => ["end"], whOpen:(P,c) => "while " + c + " do", whClose:() => ["end"],
+  ifOpen:(P,c) => "if " + c + " then", elseLine:() => "else", ifClose:() => ["end"],
+  letT:(P,n,t,e) => "local " + n + " = " + e, setT:(P,l,e) => l + " = " + e,
+  swapT:(P,x,y) => [x + ", " + y + " = " + y + ", " + x], swapDeclare:false,
+  retT:(P,e) => e == null ? "do return end" : "return " + e, brkT:() => "break",
+  callT:(P,fn,args) => fn + "(" + args.join(", ") + ")",
+  newArrT:(P,n,size) => "local " + n + " = {}; for _z = 1, (" + size + ") do " + n + "[_z] = 0 end",
+  main:(P,F,srch) => ["", "local data = {" + lit(srch ? DEMO.searchArr : DEMO.sortArr) + "}",
+    srch ? "print(" + F + "(data, " + DEMO.target + "))"
+         : F + "(data" + (F === "mergeSort" || F === "quickSort" ? ", 0, #data - 1" : "") + ")",
+    srch ? "" : "print(table.concat(data, \", \"))"].filter(x => x !== "") }),
+
+julia: mk({ label:"Julia", ext:"jl", cmt:"#", term:"", base1:true, name:snake,
+  lenT:a => "length(" + a + ")", divT:(x,y) => "div(" + x + ", " + y + ")",
+  fnOpen:(P,n,ps) => ["function " + P.name(n) + "(" + ps.map(p => p[0]).join(", ") + ")"],
+  fnClose:() => ["end"],
+  forOpen:(P,v,f,t,d) => d === "up" ? "for " + v + " in (" + f + "):(" + t + ")"
+                                    : "for " + v + " in (" + f + "):-1:(" + t + ")",
+  forClose:() => ["end"], whOpen:(P,c) => "while " + c, whClose:() => ["end"],
+  ifOpen:(P,c) => "if " + c, elseLine:() => "else", ifClose:() => ["end"],
+  letT:(P,n,t,e) => n + " = " + e, setT:(P,l,e) => l + " = " + e,
+  swapT:(P,x,y) => [x + ", " + y + " = " + y + ", " + x], swapDeclare:false,
+  retT:(P,e) => e == null ? "return" : "return " + e, brkT:() => "break",
+  callT:(P,fn,args) => P.name(fn) + "(" + args.join(", ") + ")",
+  newArrT:(P,n,size) => n + " = zeros(Int, max(0, " + size + "))",
+  main:(P,F,srch) => ["", "data = [" + lit(srch ? DEMO.searchArr : DEMO.sortArr) + "]",
+    srch ? "println(" + P.name(F) + "(data, " + DEMO.target + "))"
+         : P.name(F) + "(data" + (F === "mergeSort" || F === "quickSort" ? ", 0, length(data) - 1" : "") + ")",
+    srch ? "" : "println(data)"].filter(x => x !== "") }),
+
+matlab: mk({ label:"MATLAB", ext:"m", cmt:"%", term:";", base1:true, valueArrays:true, mainFirst:true,
+  neqL:"~=", idxT:(a,i) => a + "(" + i + ")", lenT:a => "numel(" + a + ")", divT:(x,y) => "floor((" + x + ") / (" + y + "))",
+  fnOpen:(P,n,ps,r) => ["function " + (r === "int" ? "result = " : ps[0][0] + " = ") + n +
+      "(" + ps.map(p => p[0]).join(", ") + ")"],
+  fnClose:() => ["end"],
+  forOpen:(P,v,f,t,d) => d === "up" ? "for " + v + " = (" + f + "):(" + t + ")"
+                                    : "for " + v + " = (" + f + "):-1:(" + t + ")",
+  forClose:() => ["end"], whOpen:(P,c) => "while " + c, whClose:() => ["end"],
+  ifOpen:(P,c) => "if " + c, elseLine:() => "else", ifClose:() => ["end"],
+  letT:(P,n,t,e) => n + " = " + e + ";", setT:(P,l,e) => l + " = " + e + ";",
+  swapT:(P,x,y,tmp) => [tmp + " = " + x + ";", x + " = " + y + ";", y + " = " + tmp + ";"], swapDeclare:false,
+  retT:(P,e) => e == null ? "return;" : "result = " + e + "; return;", brkT:() => "break;",
+  callT:(P,fn,args) => args[0] + " = " + fn + "(" + args.join(", ") + ");",
+  newArrT:(P,n,size) => n + " = zeros(1, max(0, " + size + "));",
+  main:(P,F,srch) => ["data = [" + lit(srch ? DEMO.searchArr : DEMO.sortArr) + "];",
+    srch ? "disp(" + F + "(data, " + DEMO.target + "))"
+         : "data = " + F + "(data" + (F === "mergeSort" || F === "quickSort" ? ", 0, numel(data) - 1" : "") + ");",
+    srch ? "" : "disp(data)", ""].filter(x => x !== "") }),
+
+r: mk({ label:"R", ext:"R", cmt:"#", term:"", base1:true, valueArrays:true, needTailReturn:true, asg:"<-",
+  trueL:"TRUE", falseL:"FALSE",
+  lenT:a => "length(" + a + ")", divT:(x,y) => "((" + x + ") %/% (" + y + "))",
+  wrapPre:() => ["# up(f, t) and down(f, t) give an empty range when there is nothing to do",
+                 "up <- function(f, t) if (t >= f) f:t else integer(0)",
+                 "down <- function(f, t) if (f >= t) f:t else integer(0)", ""],
+  fnOpen:(P,n,ps) => [n + " <- function(" + ps.map(p => p[0]).join(", ") + ") {"],
+  forOpen:(P,v,f,t,d) => d === "up" ? "for (" + v + " in up(" + f + ", " + t + ")) {"
+                                    : "for (" + v + " in down(" + f + ", " + t + ")) {",
+  letT:(P,n,t,e) => n + " <- " + e, setT:(P,l,e) => l + " <- " + e,
+  swapT:(P,x,y,tmp) => [tmp + " <- " + x, x + " <- " + y, y + " <- " + tmp], swapDeclare:false,
+  retT:(P,e) => e == null ? "return(a)" : "return(" + e + ")", brkT:() => "break",
+  callT:(P,fn,args) => args[0] + " <- " + fn + "(" + args.join(", ") + ")",
+  newArrT:(P,n,size) => n + " <- integer(max(0, " + size + "))",
+  main:(P,F,srch) => ["", "data <- c(" + lit(srch ? DEMO.searchArr : DEMO.sortArr) + ")",
+    srch ? "cat(" + F + "(data, " + DEMO.target + "), \"\\n\")"
+         : "data <- " + F + "(data" + (F === "mergeSort" || F === "quickSort" ? ", 0, length(data) - 1" : "") + ")",
+    srch ? "" : "cat(data, \"\\n\")"].filter(x => x !== "") }),
+
+pascal: mk({ label:"Pascal", ext:"pas", cmt:"//", declTop:true, ind:"  ",
+  eqL:"=", neqL:"<>", asg:":=", andL:"and", orL:"or",
+  ty:{int:"integer",bool:"boolean",arr:"array of integer",void:"void"},
+  lenT:a => "Length(" + a + ")", divT:(x,y) => "((" + x + ") div (" + y + "))",
+  wrapPre:() => ["program Demo;", "{$MODE DELPHI}", "uses SysUtils;", "", "type TArr = array of integer;", ""],
+  fnOpen:(P,n,ps,r) => [(r === "int" ? "function " : "procedure ") + n + "(" +
+      ps.map(p => (p[1] === "arr" ? "var " + p[0] + ": TArr" : p[0] + ": integer")).join("; ") + ")" +
+      (r === "int" ? ": integer;" : ";")],
+  fnClose:() => ["end;"],
+  forOpen:(P,v,f,t,d) => d === "up" ? "for " + v + " := " + f + " to " + t + " do begin"
+                                    : "for " + v + " := " + f + " downto " + t + " do begin",
+  forClose:() => ["end;"], whOpen:(P,c) => "while " + c + " do begin", whClose:() => ["end;"],
+  ifOpen:(P,c) => "if " + c + " then begin", elseLine:() => "end else begin", ifClose:() => ["end;"],
+  setT:(P,l,e) => l + " := " + e + ";",
+  swapT:(P,x,y,tmp) => [tmp + " := " + x + ";", x + " := " + y + ";", y + " := " + tmp + ";"],
+  retT:(P,e) => e == null ? "Exit;" : "Result := " + e + "; Exit;", brkT:() => "Break;",
+  callT:(P,fn,args) => fn + "(" + args.join(", ") + ");",
+  newArrT:(P,n,size) => "SetLength(" + n + ", " + size + ");",
+  arrLocal:true,
+  main:(P,F,srch) => ["", "var data: TArr; i: integer;", "begin",
+    "  SetLength(data, " + (srch ? DEMO.searchArr : DEMO.sortArr).length + ");",
+    (srch ? DEMO.searchArr : DEMO.sortArr).map((v,ix) => "  data[" + ix + "] := " + v + ";").join("\n"),
+    srch ? "  WriteLn(" + F + "(data, " + DEMO.target + "));"
+         : "  " + F + "(data" + (F === "mergeSort" || F === "quickSort" ? ", 0, Length(data) - 1" : "") + ");",
+    srch ? "end." : "  for i := 0 to Length(data) - 1 do Write(data[i], ' ');",
+    srch ? "" : "  WriteLn;", srch ? "" : "end."].filter(x => x !== "") }),
+
+vb: mk({ label:"Visual Basic", ext:"vb", cmt:"'", term:"", declTop:true, baseDepth:1,
+  eqL:"=", neqL:"<>", andL:"AndAlso", orL:"OrElse", trueL:"True", falseL:"False",
+  ty:{int:"Integer",bool:"Boolean",arr:"Integer()",void:""},
+  idxT:(a,i) => a + "(" + i + ")", lenT:a => a + ".Length", divT:(x,y) => "((" + x + ") \\ (" + y + "))",
+  wrapPre:() => ["Imports System", "", "Module Demo"], wrapPost:() => ["End Module"],
+  fnOpen:(P,n,ps,r) => [(r === "int" ? "Function " : "Sub ") + n + "(" +
+      ps.map(p => p[0] + " As " + (p[1] === "arr" ? "Integer()" : "Integer")).join(", ") + ")" +
+      (r === "int" ? " As Integer" : "")],
+  fnClose:(P,r) => [r === "int" ? "End Function" : "End Sub"],
+  forOpen:(P,v,f,t,d) => d === "up" ? "For " + v + " = " + f + " To " + t
+                                    : "For " + v + " = " + f + " To " + t + " Step -1",
+  forClose:() => ["Next"], whOpen:(P,c) => "While " + c, whClose:() => ["End While"],
+  ifOpen:(P,c) => "If " + c + " Then", elseLine:() => "Else", ifClose:() => ["End If"],
+  setT:(P,l,e) => l + " = " + e,
+  swapT:(P,x,y,tmp) => [tmp + " = " + x, x + " = " + y, y + " = " + tmp],
+  retT:(P,e) => e == null ? "Return" : "Return " + e,
+  brkT:(P,ctx) => ctx === "for" ? "Exit For" : "Exit While",
+  callT:(P,fn,args) => fn + "(" + args.join(", ") + ")",
+  newArrT:(P,n,size) => "ReDim " + n + "(Math.Max(0, " + size + ") - 1)",
+  newArrDecl:true,
+  main:(P,F,srch) => ["", "Sub Main()",
+    "    Dim data As Integer() = {" + lit(srch ? DEMO.searchArr : DEMO.sortArr) + "}",
+    srch ? "    Console.WriteLine(" + F + "(data, " + DEMO.target + "))"
+         : "    " + F + "(data" + (F === "mergeSort" || F === "quickSort" ? ", 0, data.Length - 1" : "") + ")",
+    srch ? "End Sub" : "    Console.WriteLine(String.Join(\", \", data))", srch ? "" : "End Sub"].filter(x => x !== "") }),
+
+fortran: mk({ label:"Fortran", ext:"f90", cmt:"!", term:"", declTop:true, sizeParam:true,
+  mainFirst:true, ind:"  ", neqL:"/=", andL:".and.", orL:".or.", trueL:".true.", falseL:".false.",
+  ty:{int:"integer",bool:"logical",arr:"integer",void:""},
+  idxT:(a,i) => a + "(" + i + ")", lenT:() => "n", divT:(x,y) => "((" + x + ") / (" + y + "))",
+  fnOpen:(P,n,ps,r) => [(r === "int" ? "recursive function " : "recursive subroutine ") + n +
+      "(" + ps.map(p => p[0]).join(", ") + ")" + (r === "int" ? " result(res)" : "")],
+  fnClose:(P,r) => [r === "int" ? "end function" : "end subroutine"],
+  forOpen:(P,v,f,t,d) => d === "up" ? "do " + v + " = " + f + ", " + t
+                                    : "do " + v + " = " + f + ", " + t + ", -1",
+  forClose:() => ["end do"], whOpen:(P,c) => "do while (" + c + ")", whClose:() => ["end do"],
+  ifOpen:(P,c) => "if (" + c + ") then", elseLine:() => "else", ifClose:() => ["end if"],
+  setT:(P,l,e) => l + " = " + e,
+  swapT:(P,x,y,tmp) => [tmp + " = " + x, x + " = " + y, y + " = " + tmp],
+  retT:(P,e) => e == null ? "return" : "res = " + e + "; return", brkT:() => "exit",
+  callT:(P,fn,args) => "call " + fn + "(" + args.join(", ") + ")",
+  newArrT:(P,n,size) => "allocate(" + n + "(0:(" + size + ") - 1)); " + n + " = 0",
+  freeT:(P,n) => "deallocate(" + n + ")",
+  allocArr:true,
+  main:(P,F,srch) => ["program demo", "  implicit none",
+    "  integer :: arr(0:" + ((srch ? DEMO.searchArr : DEMO.sortArr).length - 1) + "), i",
+    "  arr = (/ " + lit(srch ? DEMO.searchArr : DEMO.sortArr) + " /)",
+    srch ? "  print *, " + F + "(arr, " + (srch ? DEMO.searchArr.length : 0) + ", " + DEMO.target + ")"
+         : "  call " + F + "(arr" + (F === "mergeSort" || F === "quickSort" ? ", 0, " + (DEMO.sortArr.length - 1) : ", " + DEMO.sortArr.length) + ")",
+    srch ? "" : "  do i = 0, " + (DEMO.sortArr.length - 1) + "; write(*,'(I0,A)',advance='no') arr(i), ' '; end do",
+    srch ? "" : "  print *, ''", "contains"].filter(x => x !== "") }),
+
+bash: mk({ label:"Bash", ext:"sh", cmt:"#", term:"", ind:"  ", trueL:"1", falseL:"0",
+  lenT:a => "${#" + a + "[@]}", divT:(x,y) => "((" + x + ") / (" + y + "))",
+  wrapPre:() => ["#!/usr/bin/env bash", "# the array 'a' is global, which keeps the Bash version readable", ""],
+  fnOpen:(P,n,ps) => {
+    const rest = ps.filter(p => p[1] !== "arr");
+    const head = [n + "() {"];
+    rest.forEach((p,i) => head.push("  local " + p[0] + "=$" + (i + 1)));
+    return head;
+  },
+  fnClose:() => ["}"],
+  forOpen:(P,v,f,t,d) => d === "up" ? "for (( " + v + " = " + f + "; " + v + " <= " + t + "; " + v + "++ )); do"
+                                    : "for (( " + v + " = " + f + "; " + v + " >= " + t + "; " + v + "-- )); do",
+  forClose:() => ["done"], whOpen:(P,c) => "while (( " + c + " )); do", whClose:() => ["done"],
+  ifOpen:(P,c) => "if (( " + c + " )); then", elseLine:() => "else", ifClose:() => ["fi"],
+  letT:(P,n,t,e) => "local " + n + "=$(( " + e + " ))", setT:(P,l,e) => "(( " + l + " = " + e + " ))",
+  swapT:(P,x,y,tmp) => ["(( " + tmp + " = " + x + " ))", "(( " + x + " = " + y + " ))", "(( " + y + " = " + tmp + " ))"],
+  swapDeclare:false,
+  retT:(P,e) => e == null ? "return" : "echo $(( " + e + " )); return", brkT:() => "break",
+  callT:(P,fn,args) => fn + " " + args.filter(x => x !== "a").map(x => "$(( " + x + " ))").join(" "),
+  newArrT:(P,n,size) => "local -a " + n + "=(); for (( _z = 0; _z < " + size + "; _z++ )); do " + n + "[$_z]=0; done",
+  main:(P,F,srch) => ["", "a=(" + (srch ? DEMO.searchArr : DEMO.sortArr).join(" ") + ")",
+    srch ? F + " " + DEMO.target : F + (F === "mergeSort" || F === "quickSort" ? " 0 $(( ${#a[@]} - 1 ))" : ""),
+    srch ? "" : "echo \"${a[@]}\""].filter(x => x !== "") }),
+
+pseudo: mk({ label:"Pseudocode", ext:"txt", cmt:"//", term:"", ind:"    ",
+  asg:"<-", eqL:"=", neqL:"!=", andL:"and", orL:"or",
+  lenT:a => "length(" + a + ")", divT:(x,y) => "floor((" + x + ") / (" + y + "))",
+  fnOpen:(P,n,ps) => ["procedure " + n.toUpperCase().replace(/([A-Z])([A-Z]+)/, "$1$2") +
+      "(" + ps.map(p => p[0].toUpperCase()).join(", ") + ")"],
+  fnClose:() => [],
+  sig:x => /^[a-z]$/.test(x) ? x : x,
+  forOpen:(P,v,f,t,d) => d === "up" ? "for " + v + " <- " + f + " to " + t + " do"
+                                    : "for " + v + " <- " + f + " down to " + t + " do",
+  forClose:() => [], whOpen:(P,c) => "while " + c + " do", whClose:() => [],
+  ifOpen:(P,c) => "if " + c + " then", elseLine:() => "else", ifClose:() => [],
+  letT:(P,n,t,e) => n + " <- " + e, setT:(P,l,e) => l + " <- " + e,
+  swapT:(P,x,y) => ["exchange " + x + " with " + y], swapDeclare:false,
+  retT:(P,e) => e == null ? "return" : "return " + e, brkT:() => "break",
+  callT:(P,fn,args) => fn.toUpperCase() + "(" + args.join(", ") + ")",
+  newArrT:(P,n,size) => "let " + n + " be a new array of size " + size,
+  main:() => [] })
+};
+const LANG_IDS = Object.keys(LANG);
+
+/* ---------------- the emitter ---------------- */
+function generate(algoKey, langId){
+  const P = LANG[langId];
+  const fns = IR[algoKey];
+  const out = [];
+  let tmpN = 0;
+  const push = (t, id, d) => out.push({t: t === "" ? "" : P.ind.repeat(d) + t, id: id || null});
+  const pushAll = (arr, id, d) => arr.forEach(l => push(l, id, d));
+
+  function collect(stmts, bag){
+    stmts.forEach(s => {
+      if(s.k === "let") bag.push([s.n, s.t]);
+      if(s.k === "newarr") bag.push([s.n, "arr"]);
+      if(s.k === "for" || s.k === "ford"){ bag.push([s.v, "int"]); collect(s.body, bag); }
+      if(s.k === "while") collect(s.body, bag);
+      if(s.k === "swap" && P.swapDeclare) bag.push(["tmp" + (++tmpN), "int"]);
+      if(s.k === "if"){ collect(s.body, bag); if(s.els) collect(s.els, bag); }
+    });
+    return bag;
+  }
+
+  let MUT = {};
+  function collectMut(stmts){
+    stmts.forEach(s => {
+      if(s.k === "set" && /^[a-zA-Z_]\w*$/.test(s.l)) MUT[s.l] = 1;
+      if(s.body) collectMut(s.body);
+      if(s.els) collectMut(s.els);
+    });
+  }
+  function walk(stmts, d, ctx){
+    stmts.forEach(s => {
+      switch(s.k){
+        case "cm": push(P.cmt + " " + s.text, null, d); break;
+        case "let":
+          if(P.declTop) push(P.setT(P, P.sig(s.n), EX(s.e, P)), s.id, d);
+          else push(P.letT(P, s.n, s.t, EX(s.e, P), !!MUT[s.n]), s.id, d);
+          break;
+        case "set": push(P.setT(P, EX(s.l, P), EX(s.e, P)), s.id, d); break;
+        case "newarr":
+          if(P.declTop || P.allocArr) push(P.newArrT(P, s.n, EX(s.size, P)), s.id, d);
+          else push(P.newArrT(P, s.n, EX(s.size, P)), s.id, d);
+          break;
+        case "free": { const f = P.freeT(P, s.n); if(f) push(f, null, d); break; }
+        case "for": case "ford": {
+          const dir = s.k === "for" ? "up" : "down";
+          push(P.forOpen(P, P.sig(s.v).replace(/^\$/, "") === s.v ? s.v : s.v, EX(s.f, P), EX(s.t, P), dir), s.id, d);
+          walk(s.body, d + 1, "for");
+          pushAll(P.forClose(P), s.id, d); break;
+        }
+        case "while":
+          push(P.whOpen(P, EX(s.c, P)), s.id, d);
+          walk(s.body, d + 1, "while");
+          pushAll(P.whClose(P), s.id, d); break;
+        case "if":
+          push(P.ifOpen(P, EX(s.c, P)), s.id, d);
+          walk(s.body, d + 1, ctx);
+          if(s.els){ push(P.elseLine(P), s.id, d); walk(s.els, d + 1, ctx); }
+          pushAll(P.ifClose(P), s.id, d); break;
+        case "swap": {
+          const tmp = "tmp" + (++tmpN);
+          pushAll(P.swapT(P, EX(s.x, P), EX(s.y, P), tmp), s.id, d); break;
+        }
+        case "ret": push(P.retT(P, s.e === "" ? null : EX(s.e, P)), s.id, d); break;
+        case "break": push(P.brkT(P, ctx), s.id, d); break;
+        case "call": {
+          const args = s.args.map(a => EX(a, P));
+          push(P.callT(P, s.fn, args), s.id, d); break;
+        }
+      }
+    });
+  }
+
+  function paramsFor(fn){
+    let params = fn.params.slice();
+    const usesLen = JSON.stringify(fn.body).indexOf("LEN(a)") >= 0;
+    if(P.sizeParam && usesLen) params = [params[0], ["n","int"]].concat(params.slice(1));
+    return params;
+  }
+  function emitFn(fn){
+    const d0 = P.baseDepth;
+    let params = paramsFor(fn);
+    let body = fn.body;
+    if(P.sizeParam) body = body.filter(s => !(s.k === "let" && s.n === "n" && s.e === "LEN(a)"));
+    tmpN = 0;
+    pushAll(P.fnOpen(P, fn.name, params, fn.ret), "sig", d0);
+    if(P.declTop){
+      const bag = [];
+      tmpN = 0; collect(body, bag);
+      tmpN = 0;
+      const seen = {};
+      const decls = bag.filter(b => { if(seen[b[0]]) return false; seen[b[0]] = 1; return true; });
+      if(P.label === "Fortran"){
+        push("implicit none", null, d0 + 1);
+        params.filter(p => p[1] !== "arr").forEach(p => push("integer, intent(in) :: " + p[0], null, d0 + 1));
+        params.filter(p => p[1] === "arr").forEach(p => push("integer, intent(inout) :: " + p[0] + "(0:n-1)", null, d0 + 1));
+        if(fn.ret === "int") push("integer :: res", null, d0 + 1);
+        decls.forEach(v => push(v[1] === "arr"
+          ? "integer, allocatable :: " + v[0] + "(:)"
+          : (v[1] === "bool" ? "logical :: " : "integer :: ") + v[0], null, d0 + 1));
+      } else if(P.label === "Pascal"){
+        push("var", null, d0 + 1);
+        decls.forEach(v => push(v[0] + ": " + (v[1] === "arr" ? "TArr" : v[1] === "bool" ? "boolean" : "integer") + ";", null, d0 + 2));
+        push("begin", null, d0);
+      } else {
+        decls.forEach(v => push("Dim " + v[0] + " As " + (v[1] === "arr" ? "Integer()" : v[1] === "bool" ? "Boolean" : "Integer"), null, d0 + 1));
+      }
+    }
+    tmpN = 0;
+    MUT = {}; collectMut(body);
+    walk(body, d0 + 1, "while");
+    if(P.needTailReturn && fn.ret !== "int") push(P.retT(P, null), "sig", d0 + 1);
+    pushAll(P.fnClose(P, fn.ret), "sig", d0);
+    push("", null, 0);
+  }
+
+  const isSearch = fns[0].ret === "int";
+  const entry = fns[0].name;
+  const mainLines = (P.main ? P.main(P, entry, isSearch) : []);
+
+  if(P.mainFirst){
+    mainLines.forEach(l => push(l, null, 0));
+    fns.forEach(emitFn);
+    if(P.label === "Fortran") push("end program demo", null, 0);
+  } else {
+    P.wrapPre().forEach(l => push(l, null, 0));
+    if(P.proto && fns.length > 1){
+      fns.forEach(f => push(P.fnOpen(P, f.name, paramsFor(f), f.ret)[0].replace(/\s*\{$/, ";"), null, P.baseDepth));
+      push("", null, 0);
+    }
+    fns.forEach(emitFn);
+    mainLines.forEach(l => push(l, null, P.baseDepth));
+    P.wrapPost().forEach(l => push(l, null, 0));
+  }
+  while(out.length && out[out.length - 1].t === "") out.pop();
+  return out;
+}
+</script>
+<script>
+const ALGOS = {
+bubble:{name:"Bubble sort",kind:"sort",move:"Swaps",
+ idea:"Walk through the array comparing neighbours and swapping them when they are out of order. After each full pass the largest remaining value has floated to the end, so the sorted region grows from the right.",
+ best:"O(n)",avg:"O(n²)",worst:"O(n²)",space:"O(1)",stable:true,method:"Exchange",
+ steps:["Start at the left with the pair a[0] and a[1].","If the left value is bigger than the right one, swap them.","Move one position right and compare the next pair.","At the end of the pass, the largest value sits in the last slot — lock it.","Repeat over the remaining unsorted part, one slot shorter each time.","If a whole pass makes no swaps, the array is already sorted and you can stop."],
+ pros:["Very easy to write and to trace by hand.","Detects an already-sorted array in one pass, giving O(n).","Stable, and sorts in place."],
+ cons:["Does far more swaps than any other simple sort.","Useless on large inputs — a 10,000 element array needs ~50 million comparisons."],
+ uses:"Teaching, and tiny arrays where clarity matters more than speed."},
+
+selection:{name:"Selection sort",kind:"sort",move:"Swaps",
+ idea:"Find the smallest value in the unsorted part, swap it into the front of that part, then repeat. The number of swaps is at most n−1, which is the fewest of any simple sort.",
+ best:"O(n²)",avg:"O(n²)",worst:"O(n²)",space:"O(1)",stable:false,method:"Selection",
+ steps:["Treat position 0 as the start of the unsorted part.","Scan the whole unsorted part and remember where the smallest value is.","Swap that smallest value with the value at the front of the unsorted part.","Lock the front position — it now holds its final value.","Move the boundary one step right and repeat until one item remains."],
+ pros:["Makes at most n−1 swaps, so it is good when writing to memory is expensive.","Predictable: the number of comparisons never depends on the input."],
+ cons:["Always O(n²), even on sorted input — there is no early exit.","Not stable: swapping across the array can jump equal values past each other."],
+ uses:"Flash memory or any storage where a write costs much more than a read."},
+
+insertion:{name:"Insertion sort",kind:"sort",move:"Shifts",
+ idea:"Sort the way you sort playing cards in your hand. Take the next card, slide the bigger cards on its left one place right, and drop the card into the gap.",
+ best:"O(n)",avg:"O(n²)",worst:"O(n²)",space:"O(1)",stable:true,method:"Insertion",
+ steps:["Treat a[0] alone as a sorted hand of one card.","Take the next value and hold it aside as the key.","Compare the key with the value to its left.","While that value is bigger, copy it one place to the right.","When you hit a smaller value or the front, drop the key into the gap.","Repeat until every card has been placed."],
+ pros:["O(n) on nearly-sorted data, which is common in the real world.","Stable, in place, and works online — you can sort as items arrive.","Fastest simple sort for small arrays, so real libraries switch to it below ~16 items."],
+ cons:["Still O(n²) on reversed data.","Shifting moves a lot of memory when values are large."],
+ uses:"Small or nearly-sorted arrays; the base case inside quicksort and Timsort."},
+
+merge:{name:"Merge sort",kind:"sort",move:"Writes",
+ idea:"Split the array down the middle until every piece holds one item, then repeatedly merge two sorted pieces into one bigger sorted piece. Merging is cheap because both sides are already in order.",
+ best:"O(n log n)",avg:"O(n log n)",worst:"O(n log n)",space:"O(n)",stable:true,method:"Divide and conquer",
+ steps:["If the piece has 0 or 1 items it is already sorted — return.","Split the piece into a left half and a right half.","Sort the left half the same way, recursively.","Sort the right half the same way.","Copy both halves out, then repeatedly take the smaller front value and write it back.","Take from the left half on ties — that is what keeps the sort stable."],
+ pros:["O(n log n) guaranteed, no bad input can slow it down.","Stable, so it is the standard for sorting records by a second key.","Works on linked lists with no extra space, and on data too big for memory."],
+ cons:["Needs an extra array of size n.","Slower than quicksort in practice because of the copying."],
+ uses:"Java's Arrays.sort for objects, external sorting of huge files, anywhere stability is required."},
+
+quick:{name:"Quick sort",kind:"sort",move:"Swaps",
+ idea:"Pick a pivot, rearrange the array so everything smaller sits left of it and everything larger sits right, then sort the two sides. The pivot is in its final place after a single partition pass.",
+ best:"O(n log n)",avg:"O(n log n)",worst:"O(n²)",space:"O(log n)",stable:false,method:"Divide and conquer",
+ steps:["Choose a pivot — here, the last value in the range.","Scan from the left with a pointer j.","Keep a boundary i marking the end of the smaller-than-pivot region.","Whenever a[j] is smaller than the pivot, grow the boundary and swap a[j] into it.","After the scan, swap the pivot just past the boundary — it is now final.","Recurse on the part left of the pivot and the part right of it."],
+ pros:["Usually the fastest comparison sort in practice: tight loops, great cache behaviour.","Sorts in place, needing only the recursion stack."],
+ cons:["Degrades to O(n²) if pivots are chosen badly — already-sorted input with a last-element pivot is the classic trap.","Not stable."],
+ uses:"C's qsort, C++ std::sort (as introsort, which falls back to heapsort), most general-purpose sorting of primitives."},
+
+heap:{name:"Heap sort",kind:"sort",move:"Swaps",
+ idea:"Treat the array as a binary tree and rearrange it into a max-heap, where every parent is at least as big as its children. The root is then the largest value: swap it to the back, shrink the heap, and repair it.",
+ best:"O(n log n)",avg:"O(n log n)",worst:"O(n log n)",space:"O(1)",stable:false,method:"Selection via heap",
+ steps:["Read the array as a tree: the children of index i are 2i+1 and 2i+2.","Starting from the last parent and moving backwards, sift each value down into place. The array is now a max-heap.","Swap the root (the largest value) with the last item of the heap.","Shrink the heap by one — the value you just moved is final.","Sift the new root down until the heap property holds again.","Repeat until the heap holds one item."],
+ pros:["O(n log n) worst case with only O(1) extra memory — the only common sort with both.","No worst-case input can trigger a blow-up."],
+ cons:["Jumps around memory, so it is usually slower than quicksort in real timings.","Not stable."],
+ uses:"Safety net inside introsort, real-time systems that cannot risk quicksort's worst case, priority queues."},
+
+shell:{name:"Shell sort",kind:"sort",move:"Shifts",
+ idea:"Insertion sort, but it first compares items that are far apart and gradually narrows the gap. Early passes move values a long way cheaply, so the final gap-1 pass has very little left to do.",
+ best:"O(n log n)",avg:"O(n^1.25)",worst:"O(n²)",space:"O(1)",stable:false,method:"Insertion with gaps",
+ steps:["Start with a gap of n/2.","Run an insertion sort that compares a[i] with a[i−gap] instead of a[i−1].","Every sublist of items 'gap' apart ends up sorted.","Halve the gap and repeat.","The last pass has gap 1, which is a plain insertion sort on almost-sorted data."],
+ pros:["Much faster than plain insertion sort with almost the same code.","In place, and needs no recursion."],
+ cons:["Its exact complexity depends on the gap sequence and is still not fully settled.","Not stable."],
+ uses:"Embedded systems and small libraries where code size matters more than the last bit of speed."},
+
+counting:{name:"Counting sort",kind:"sort",move:"Writes",
+ idea:"Do not compare anything. Count how many times each value appears, turn those counts into positions, and write every value straight where it belongs. This beats the O(n log n) comparison barrier because it never compares two items.",
+ best:"O(n + k)",avg:"O(n + k)",worst:"O(n + k)",space:"O(n + k)",stable:true,method:"Counting, non-comparison",
+ steps:["Find the smallest and largest value to learn the range k.","Make a count array of size k and tally how often each value appears.","Turn the tallies into running totals — each entry now says where that value's block ends.","Walk the input backwards, placing each value at its recorded position and decrementing the count.","Going backwards is what makes the sort stable."],
+ pros:["Linear time when the value range k is not much larger than n.","Stable, and it is the engine inside radix sort."],
+ cons:["Only works for integers or keys you can index by.","Wastes huge memory if the range is wide — sorting 10 values between 1 and a million needs a million counters."],
+ uses:"Sorting ages, exam marks, pixel values, or any small bounded key; the inner pass of radix sort."},
+
+linear:{name:"Linear search",kind:"search",move:"Probes",sorted:false,
+ idea:"Look at every item from the start until you find the target or run out of array. It makes no assumptions at all, so it is the only one of these that works on unsorted data.",
+ best:"O(1)",avg:"O(n)",worst:"O(n)",space:"O(1)",method:"Sequential scan",
+ steps:["Start at index 0.","Compare the value there with the target.","If they match, return the index — you are done.","Otherwise move one step right.","If you fall off the end, the target is not present, so return −1."],
+ pros:["Works on any array, sorted or not.","No setup cost, and it is the fastest option for very small arrays.","Works on linked lists and streams where you cannot jump to the middle."],
+ cons:["O(n): a million-item array means a million comparisons in the worst case."],
+ uses:"Unsorted data, tiny arrays, or a single one-off lookup where sorting first would cost more."},
+
+binary:{name:"Binary search",kind:"search",move:"Probes",sorted:true,
+ idea:"On sorted data, check the middle item. That one comparison tells you which half the target must be in, so you throw the other half away. Each step halves the problem, which is why a million items need only about twenty checks.",
+ best:"O(1)",avg:"O(log n)",worst:"O(log n)",space:"O(1)",method:"Divide and conquer",
+ steps:["Set lo to the first index and hi to the last.","While lo is not past hi, compute mid = lo + (hi − lo)/2.","If a[mid] is the target, return mid.","If a[mid] is smaller than the target, the answer must be to the right: set lo = mid + 1.","Otherwise the answer is to the left: set hi = mid − 1.","If the range empties out, the target is not present."],
+ pros:["O(log n): 1,000,000 items take at most 20 comparisons.","Constant extra memory in its loop form."],
+ cons:["The array must be sorted first, which costs O(n log n).","Needs random access, so it is no good on a linked list.","Writing mid as (lo+hi)/2 can overflow in C and Java on very large arrays."],
+ uses:"Everywhere: database indexes, std::lower_bound, finding insertion points, and binary-searching an answer range in competitive programming."},
+
+jump:{name:"Jump search",kind:"search",move:"Probes",sorted:true,
+ idea:"Skip ahead in fixed blocks of about √n until you overshoot the target, then walk backwards through just that one block. It needs fewer jumps than a linear scan but never jumps backwards far, which suits storage that is slow to seek.",
+ best:"O(1)",avg:"O(√n)",worst:"O(√n)",space:"O(1)",method:"Block skipping",
+ steps:["Choose a block size of √n.","Jump forward one block at a time while the value at the block edge is still smaller than the target.","Once the edge value is not smaller, the target must be inside the block you just skipped.","Walk that block from its start, one item at a time.","Return the index on a match, or −1 at the end of the block."],
+ pros:["Better than linear search and simpler than binary search.","Only ever steps forward in big hops then scans one small run — friendly to tape or disk."],
+ cons:["√n is far worse than log n — 1,000,000 items need about 1,000 checks instead of 20.","Still requires sorted data."],
+ uses:"Sorted data on media where jumping backwards is expensive."},
+
+interpolation:{name:"Interpolation search",kind:"search",move:"Probes",sorted:true,
+ idea:"Guess where the value should be instead of always splitting in the middle — the way you open a phone book near the back for the name Zaveri. On evenly spread data it reaches the target in about log log n steps.",
+ best:"O(1)",avg:"O(log log n)",worst:"O(n)",space:"O(1)",method:"Positional estimate",
+ steps:["Set lo and hi to the ends of the range.","Estimate the position: pos = lo + (target − a[lo]) × (hi − lo) / (a[hi] − a[lo]).","If a[pos] is the target, return pos.","If it is too small, search to the right of pos; if too big, search to the left.","Stop when the target falls outside the range a[lo]..a[hi]."],
+ pros:["On uniformly spread values it beats binary search — about log log n probes.","Uses the actual values, not just their order."],
+ cons:["Collapses to O(n) when values are clustered or exponential.","The arithmetic can overflow, and equal endpoints need a guard against dividing by zero."],
+ uses:"Large sorted datasets known to be evenly distributed, such as timestamps or generated IDs."}
+};
+/* =====================================================================
+   The recorders. Each one runs the real algorithm and writes down a
+   frame per step: the array, what is highlighted, the running counters,
+   a plain-words note, a deeper "why", and the id of the source line
+   that is executing — which is what drives the code panel.
+   ===================================================================== */
+const SORTS = ["bubble","selection","insertion","merge","quick","heap","shell","counting"];
+const SEARCHES = ["linear","binary","jump","interpolation"];
+const MAX_FRAMES = 40000;
+
+function Rec(a){
+  const frames = [], st = {comparisons:0, swaps:0, accesses:0};
+  return {
+    a, frames, st,
+    push(hl, note, ln, why){
+      if(frames.length < MAX_FRAMES)
+        frames.push({a:a.slice(), hl:hl||{}, st:{...st}, note:note||"", ln:ln||null, why:why||""});
+    },
+    cmp(n){ st.comparisons += (n||1); st.accesses += 2*(n||1); },
+    mv(n){ st.swaps += (n||1); st.accesses += (n||1); }
+  };
+}
+const L = s => Array.from(s).sort((x,y) => x-y);
+function range(lo,hi){ const r=[]; for(let i=lo;i<=hi;i++) r.push(i); return r; }
+function outside(n,lo,hi){ const r=[]; for(let i=0;i<n;i++) if(i<lo||i>hi) r.push(i); return r; }
+function ptr(lo,hi,mid){ const o={}; o[lo]="lo"; o[hi]=o[hi]?o[hi]+"/hi":"hi"; if(mid!==undefined) o[mid]=o[mid]?o[mid]+"/mid":"mid"; return o; }
+function finish(R,msg){ R.push({locked:range(0,R.a.length-1), done:true}, msg, null, "Every index is now locked, so the algorithm stops."); }
+
+/* ---------------- sorting ---------------- */
+function bubble(R){
+  const a=R.a, n=a.length, lock=new Set();
+  R.push({}, "Ready. Bubble sort compares neighbours and swaps the bigger one right.", "init",
+    "n is read once. Everything after this is two nested loops over that length.");
+  for(let i=0;i<n-1;i++){
+    R.push({locked:L(lock)}, `Pass ${i+1}. The last ${i} item(s) are already final, so this pass is shorter.`, "outer",
+      "Each pass pushes one more large value to the end, so the inner loop can stop one step earlier every time.");
+    for(let j=0;j<n-1-i;j++){
+      R.cmp();
+      R.push({cmp:[j,j+1], locked:L(lock)}, `Is a[${j}] = ${a[j]} bigger than a[${j+1}] = ${a[j+1]}?`, "cmp",
+        "Bubble sort only ever compares two touching items. That is why values move one step at a time and why it is slow.");
+      if(a[j]>a[j+1]){
+        const x=a[j]; a[j]=a[j+1]; a[j+1]=x; R.mv(2);
+        R.push({swp:[j,j+1], locked:L(lock)}, `Yes — swap, so ${x} moves one place right.`, "swap",
+          "The larger value keeps travelling right until it meets something even larger, or reaches the end.");
+      }
+    }
+    lock.add(n-1-i);
+    R.push({locked:L(lock)}, `a[${n-1-i}] = ${a[n-1-i]} has reached its final place.`, "outer",
+      "Nothing to the left of this index is larger, so this slot never changes again.");
+    let sorted=true;
+    for(let k=0;k<n-1-i-1;k++) if(a[k]>a[k+1]) sorted=false;
+    if(sorted){
+      for(let k=0;k<n;k++) lock.add(k);
+      R.push({locked:L(lock)}, "A full pass with no swaps — the array is already sorted, so stop.", "early",
+        "This early exit is what gives bubble sort its O(n) best case on data that is already in order.");
+      break;
+    }
+  }
+  finish(R,"Sorted.");
+}
+function selection(R){
+  const a=R.a, n=a.length, lock=new Set();
+  R.push({}, "Ready. Selection sort finds the smallest value, then puts it at the front.", "init", "");
+  for(let i=0;i<n-1;i++){
+    let m=i;
+    R.push({key:m, locked:L(lock), win:[i,n-1]}, `Searching indices ${i}–${n-1} for the smallest value. Best so far: a[${m}] = ${a[m]}.`, "pick",
+      "Only the position of the smallest value is remembered. Nothing moves during the scan, which is why selection sort swaps so rarely.");
+    for(let j=i+1;j<n;j++){
+      R.cmp();
+      R.push({cmp:[j], key:m, locked:L(lock), win:[i,n-1]}, `Is a[${j}] = ${a[j]} smaller than ${a[m]}?`, "cmp",
+        "Every item in the unsorted part is checked, every single pass. That is why the comparison count never improves, even on sorted input.");
+      if(a[j]<a[m]){ m=j; R.push({key:m, locked:L(lock), win:[i,n-1]}, `New smallest: a[${j}] = ${a[j]}.`, "newmin", ""); }
+    }
+    if(m!==i){
+      const x=a[i]; a[i]=a[m]; a[m]=x; R.mv(2);
+      R.push({swp:[i,m], locked:L(lock)}, `Swap ${a[i]} into index ${i}.`, "swap",
+        "This single swap can jump a value across the whole array — which is exactly why selection sort is not stable.");
+    } else {
+      R.push({locked:L(lock)}, `a[${i}] was already the smallest, so no swap.`, "swapchk", "");
+    }
+    lock.add(i);
+    R.push({locked:L(lock)}, `a[${i}] = ${a[i]} is final.`, "outer", "");
+  }
+  finish(R,"Sorted.");
+}
+function insertion(R){
+  const a=R.a, n=a.length, lock=new Set([0]);
+  R.push({locked:L(lock)}, "Ready. a[0] on its own already counts as sorted.", "init",
+    "Insertion sort grows a sorted region on the left, one card at a time.");
+  for(let i=1;i<n;i++){
+    const key=a[i]; let j=i-1;
+    R.push({key:i, locked:L(lock)}, `Pick up a[${i}] = ${key}. Where does it belong on the left?`, "take",
+      "The value is copied into a variable first, which frees up its slot so the bigger values can slide right.");
+    while(j>=0){
+      R.cmp();
+      R.push({cmp:[j], key:j+1, locked:L(lock)}, `Is a[${j}] = ${a[j]} bigger than ${key}?`, "cmp",
+        "The loop stops the moment it meets a value that is not bigger. On nearly-sorted data it stops almost immediately, giving O(n).");
+      if(a[j]<=key){ R.push({key:j+1, locked:L(lock)}, `No — ${key} belongs right after it.`, "cmp", ""); break; }
+      a[j+1]=a[j]; R.mv();
+      R.push({swp:[j+1], key:j, locked:L(lock)}, `Yes — copy ${a[j]} one place right to open a gap.`, "shift",
+        "This is a copy, not a swap. Only one value is in flight, so insertion sort moves far less data than bubble sort.");
+      j--;
+    }
+    a[j+1]=key; R.mv(); lock.add(i);
+    R.push({swp:[j+1], locked:L(lock)}, `Drop ${key} into index ${j+1}.`, "place",
+      "Equal values are never jumped over, which is what makes insertion sort stable.");
+  }
+  finish(R,"Sorted.");
+}
+function mergeSortR(R){
+  const a=R.a;
+  R.push({}, "Ready. Split the array in half until each piece holds one item, then merge back in order.", "base", "");
+  (function ms(lo,hi){
+    if(lo>=hi){
+      if(lo===hi) R.push({win:[lo,hi], locked:[lo]}, `One item (a[${lo}] = ${a[lo]}) is sorted by definition.`, "base",
+        "This is the base case that stops the recursion.");
+      return;
+    }
+    const mid=(lo+hi)>>1;
+    R.push({win:[lo,hi]}, `Split indices ${lo}–${hi} into ${lo}–${mid} and ${mid+1}–${hi}.`, "split",
+      "The split is pure arithmetic — no comparisons happen on the way down. All the work is in the merges on the way back up.");
+    ms(lo,mid); ms(mid+1,hi);
+    const left=a.slice(lo,mid+1), right=a.slice(mid+1,hi+1);
+    R.push({win:[lo,hi]}, `Both halves are sorted. Copy them out and merge indices ${lo}–${hi}.`, "copy",
+      "The copies are why merge sort needs O(n) extra memory — you cannot merge two runs in place without them.");
+    let i=0,j=0,k=lo;
+    while(i<left.length&&j<right.length){
+      R.cmp();
+      if(left[i]<=right[j]){
+        a[k]=left[i];
+        R.push({swp:[k], win:[lo,hi]}, `${left[i]} ≤ ${right[j]} — write ${left[i]} to index ${k}.`, "takeL",
+          "On a tie the left run wins. That single choice is the whole reason merge sort is stable.");
+        i++;
+      } else {
+        a[k]=right[j];
+        R.push({swp:[k], win:[lo,hi]}, `${right[j]} < ${left[i]} — write ${right[j]} to index ${k}.`, "takeR", "");
+        j++;
+      }
+      R.mv(); k++;
+    }
+    while(i<left.length){ a[k]=left[i]; R.mv(); R.push({swp:[k], win:[lo,hi]}, `Left run still has items — write ${left[i]} to index ${k}.`, "restL", "Whatever is left over is already sorted, so it can be copied straight across."); i++; k++; }
+    while(j<right.length){ a[k]=right[j]; R.mv(); R.push({swp:[k], win:[lo,hi]}, `Right run still has items — write ${right[j]} to index ${k}.`, "restR", ""); j++; k++; }
+    R.push({win:[lo,hi], locked:range(lo,hi)}, `Indices ${lo}–${hi} are now one sorted run.`, "merge", "");
+  })(0,a.length-1);
+  finish(R,"Sorted.");
+}
+function quickSortR(R){
+  const a=R.a, lock=new Set();
+  R.push({}, "Ready. Choose a pivot, push smaller values left of it, then repeat on each side.", "base", "");
+  (function qs(lo,hi){
+    if(lo>hi) return;
+    if(lo===hi){ lock.add(lo); R.push({locked:L(lock)}, `A range of one at index ${lo} — already final.`, "base", ""); return; }
+    const pivot=a[hi];
+    R.push({pivot:hi, win:[lo,hi], locked:L(lock)}, `Range ${lo}–${hi}. The pivot is the last value, ${pivot}.`, "pivot",
+      "Taking the last item as pivot is the Lomuto scheme. It is simple, but on already-sorted input it gives the worst case.");
+    let i=lo-1;
+    for(let j=lo;j<hi;j++){
+      R.cmp();
+      R.push({cmp:[j], pivot:hi, win:[lo,hi], locked:L(lock)}, `Is a[${j}] = ${a[j]} smaller than the pivot ${pivot}?`, "cmp",
+        "i marks the end of the smaller-than-pivot region. Everything up to i is known to be smaller.");
+      if(a[j]<pivot){
+        i++;
+        if(i!==j){ const x=a[i]; a[i]=a[j]; a[j]=x; R.mv(2);
+          R.push({swp:[i,j], pivot:hi, win:[lo,hi], locked:L(lock)}, `Yes — swap it into the smaller region at index ${i}.`, "grow", ""); }
+        else R.push({swp:[i], pivot:hi, win:[lo,hi], locked:L(lock)}, `Yes — and it is already in the right region.`, "grow", "");
+      }
+    }
+    const p=i+1; const x=a[p]; a[p]=a[hi]; a[hi]=x; R.mv(2); lock.add(p);
+    R.push({swp:[p,hi], locked:L(lock)}, `Drop the pivot ${pivot} at index ${p}. It is now final.`, "place",
+      "After one partition pass the pivot is in exactly the place it would occupy in the sorted array — no later step can move it.");
+    qs(lo,p-1); qs(p+1,hi);
+  })(0,a.length-1);
+  finish(R,"Sorted.");
+}
+function heapSortR(R){
+  const a=R.a, n=a.length, lock=new Set();
+  R.push({}, "Ready. Read the array as a tree: the children of index i sit at 2i+1 and 2i+2.", "init",
+    "No extra memory is needed — the heap lives inside the same array.");
+  function sift(size,root){
+    let largest=root, lc=2*root+1, rc=2*root+2;
+    if(lc<size){ R.cmp(); R.push({cmp:[lc], key:root, win:[0,size-1], locked:L(lock)}, `Parent a[${root}] = ${a[root]} against left child a[${lc}] = ${a[lc]}.`, "cmpl",
+      "A max-heap only demands parent ≥ children. It does not sort the level, which is why heapify is cheap."); if(a[lc]>a[largest]) largest=lc; }
+    if(rc<size){ R.cmp(); R.push({cmp:[rc], key:root, win:[0,size-1], locked:L(lock)}, `Against right child a[${rc}] = ${a[rc]}.`, "cmpr", ""); if(a[rc]>a[largest]) largest=rc; }
+    if(largest!==root){
+      const x=a[root]; a[root]=a[largest]; a[largest]=x; R.mv(2);
+      R.push({swp:[root,largest], win:[0,size-1], locked:L(lock)}, `A child is bigger — swap it up and keep sifting down.`, "sswap",
+        "Sifting follows one path from root to leaf, so it costs at most log n steps.");
+      sift(size,largest);
+    }
+  }
+  for(let i=(n>>1)-1;i>=0;i--){
+    R.push({key:i, win:[0,n-1]}, `Sift down the subtree rooted at index ${i}.`, "build",
+      "Building bottom-up costs O(n) overall, not O(n log n) — most subtrees are tiny.");
+    sift(n,i);
+  }
+  R.push({win:[0,n-1]}, "The array is now a max-heap. a[0] holds the largest value.", "build", "");
+  for(let last=n-1;last>0;last--){
+    const x=a[0]; a[0]=a[last]; a[last]=x; R.mv(2); lock.add(last);
+    R.push({swp:[0,last], locked:L(lock)}, `Swap the root ${a[last]} to index ${last} and shrink the heap.`, "extract",
+      "The heap shrinks by one each round while the sorted tail grows. The two share the same array.");
+    sift(last,0);
+  }
+  finish(R,"Sorted.");
+}
+function shellSortR(R){
+  const a=R.a, n=a.length;
+  R.push({}, "Ready. Shell sort is insertion sort that starts by comparing far-apart items.", "init", "");
+  for(let gap=n>>1;gap>0;gap>>=1){
+    R.push({}, `Gap = ${gap}. Each item is now compared with the one ${gap} places to its left.`, "gap",
+      "Big gaps move values a long way for very few moves, so the final gap-1 pass has almost nothing left to do.");
+    for(let i=gap;i<n;i++){
+      const key=a[i]; let j=i;
+      R.push({key:i}, `Hold a[${i}] = ${key} aside.`, "take", "");
+      while(j>=gap){
+        R.cmp();
+        R.push({cmp:[j-gap], key:j}, `Is a[${j-gap}] = ${a[j-gap]} bigger than ${key}?`, "cmp", "");
+        if(a[j-gap]<=key) break;
+        a[j]=a[j-gap]; R.mv();
+        R.push({swp:[j], key:j-gap}, `Yes — move it ${gap} places right.`, "shift", "");
+        j-=gap;
+      }
+      a[j]=key; R.mv();
+      R.push({swp:[j]}, `Place ${key} at index ${j}.`, "place", "");
+    }
+  }
+  finish(R,"Sorted. The last pass had gap 1 — plain insertion sort on nearly-sorted data.");
+}
+function countingSortR(R){
+  const a=R.a, n=a.length;
+  const lo=Math.min(...a), hi=Math.max(...a);
+  R.push({}, `Ready. Values run from ${lo} to ${hi}, so build ${hi-lo+1} counters. Nothing gets compared.`, "range",
+    "Counting sort escapes the O(n log n) comparison barrier by using the values themselves as array indices.");
+  const tally=new Array(hi-lo+1).fill(0);
+  for(let i=0;i<n;i++){
+    tally[a[i]-lo]++; R.mv();
+    R.push({cmp:[i]}, `Tally a[${i}] = ${a[i]} — seen ${tally[a[i]-lo]} time(s).`, "tally",
+      "One pass over the input, one counter bump each time. This part is O(n).");
+  }
+  R.push({}, "Counting done. Running totals now say where each value's block ends.", "sums",
+    "The prefix sums turn 'how many' into 'where', which is what lets every item be placed in one move.");
+  let k=0; const lock=new Set();
+  for(let v=lo;v<=hi;v++){
+    let c=tally[v-lo];
+    while(c-->0){
+      a[k]=v; R.mv(); lock.add(k);
+      R.push({swp:[k], locked:L(lock)}, `Write ${v} into index ${k} — the tally said it belongs here.`, "place",
+        "The real implementation walks the input backwards into a second array, which keeps equal records in their original order.");
+      k++;
+    }
+  }
+  finish(R,"Sorted in linear time, without comparing any two values.");
+}
+
+/* ---------------- searching ---------------- */
+function linearSearch(R,t){
+  const a=R.a, n=a.length, out=[];
+  R.push({ptrs:{}, out:[]}, `Looking for ${t}. No assumptions about order — check every index from the left.`, "init",
+    "This is the only search here that works on unsorted data.");
+  for(let i=0;i<n;i++){
+    R.cmp(); R.mv();
+    R.push({cmp:[i], out:out.slice(), ptrs:{[i]:"i"}}, `Is a[${i}] = ${a[i]} equal to ${t}?`, "cmp",
+      "One comparison rules out exactly one item — which is why the cost grows in step with n.");
+    if(a[i]===t){ R.push({found:i, out:out.slice()}, `Found ${t} at index ${i} after ${i+1} comparison(s).`, "hit", ""); return; }
+    out.push(i);
+  }
+  R.push({out:out.slice(), fail:true}, `Checked all ${n} items — ${t} is not here, so return −1.`, "miss", "");
+}
+function binarySearch(R,t){
+  const a=R.a; let lo=0, hi=a.length-1;
+  R.push({win:[lo,hi], ptrs:ptr(lo,hi)}, `Looking for ${t} in sorted data. Start with the whole range.`, "init",
+    "Binary search trades a sorting cost up front for very fast lookups afterwards.");
+  while(lo<=hi){
+    const mid=(lo+hi)>>1;
+    R.push({win:[lo,hi], out:outside(a.length,lo,hi), ptrs:ptr(lo,hi,mid)}, `mid = ${mid}.`, "mid",
+      "Written as lo + (hi − lo)/2 rather than (lo + hi)/2, because the second form can overflow in C or Java.");
+    R.cmp(); R.mv();
+    R.push({cmp:[mid], win:[lo,hi], out:outside(a.length,lo,hi), ptrs:ptr(lo,hi,mid)}, `Is a[${mid}] = ${a[mid]} equal to ${t}?`, "cmp", "");
+    if(a[mid]===t){ R.push({found:mid, out:outside(a.length,lo,hi)}, `Found ${t} at index ${mid}.`, "hit", ""); return; }
+    if(a[mid]<t){
+      R.push({win:[mid+1,hi], out:outside(a.length,mid+1,hi), ptrs:ptr(mid+1,hi)}, `${a[mid]} < ${t} — discard indices ${lo}–${mid}.`, "right",
+        "Half the remaining items are eliminated by that one comparison. Twenty such steps cover a million items.");
+      lo=mid+1;
+    } else {
+      R.push({win:[lo,mid-1], out:outside(a.length,lo,mid-1), ptrs:ptr(lo,mid-1)}, `${a[mid]} > ${t} — discard indices ${mid}–${hi}.`, "left",
+        "Half the remaining items are eliminated by that one comparison.");
+      hi=mid-1;
+    }
+  }
+  R.push({out:range(0,a.length-1), fail:true}, `The range is empty, so ${t} is not present. Return −1.`, "miss", "");
+}
+function jumpSearch(R,t){
+  const a=R.a, n=a.length, step=Math.max(1,Math.floor(Math.sqrt(n)));
+  let prev=0, curr=0;
+  R.push({win:[0,n-1]}, `Looking for ${t}. Block size = √${n} ≈ ${step}.`, "step",
+    "√n balances the two costs: too small and you jump too often, too large and the final walk is too long.");
+  while(curr<n){
+    const edge=Math.min(curr,n-1);
+    R.cmp(); R.mv();
+    R.push({cmp:[edge], win:[prev,edge], out:outside(n,prev,n-1), ptrs:{[prev]:"block",[edge]:"edge"}},
+      `Block edge a[${edge}] = ${a[edge]}. Still smaller than ${t}?`, "cmpEdge",
+      "Only the edge of each block is checked, so a whole block is ruled out by a single comparison.");
+    if(a[edge]>=t) break;
+    prev=curr; curr+=step;
+    R.push({win:[prev,Math.min(curr,n-1)], out:outside(n,prev,n-1)}, `Yes — skip that block and jump to index ${Math.min(curr,n-1)}.`, "jump", "");
+  }
+  const last=Math.min(curr,n-1);
+  R.push({win:[prev,last], out:outside(n,prev,last)}, `${t} must lie between indices ${prev} and ${last}. Walk that block.`, "blk", "");
+  for(let i=prev;i<=last;i++){
+    R.cmp(); R.mv();
+    R.push({cmp:[i], win:[prev,last], out:outside(n,prev,last), ptrs:{[i]:"i"}}, `Is a[${i}] = ${a[i]} equal to ${t}?`, "cmp", "");
+    if(a[i]===t){ R.push({found:i, out:outside(n,prev,last)}, `Found ${t} at index ${i}.`, "hit", ""); return; }
+  }
+  R.push({out:range(0,n-1), fail:true}, `${t} is not in that block, so it is not in the array.`, "miss", "");
+}
+function interpolationSearch(R,t){
+  const a=R.a, n=a.length; let lo=0, hi=n-1;
+  R.push({win:[lo,hi], ptrs:ptr(lo,hi)}, `Looking for ${t}. Guess where it should sit instead of taking the midpoint.`, "init",
+    "Like opening a phone book near the back for a name starting with Z.");
+  while(lo<=hi&&t>=a[lo]&&t<=a[hi]){
+    if(a[lo]===a[hi]){
+      R.cmp(); R.mv();
+      if(a[lo]===t){ R.push({found:lo}, `Both ends hold ${t} — found at index ${lo}.`, "guard", ""); return; }
+      break;
+    }
+    const pos=lo+Math.floor((t-a[lo])*(hi-lo)/(a[hi]-a[lo]));
+    R.push({win:[lo,hi], out:outside(n,lo,hi), ptrs:Object.assign(ptr(lo,hi),{[pos]:"guess"})},
+      `pos = ${lo} + (${t}−${a[lo]})×(${hi}−${lo})/(${a[hi]}−${a[lo]}) = ${pos}.`, "guess",
+      "The formula assumes values are spread evenly. When they are, this lands very close and the search finishes in about log log n probes.");
+    R.cmp(); R.mv();
+    R.push({cmp:[pos], win:[lo,hi], out:outside(n,lo,hi), ptrs:Object.assign(ptr(lo,hi),{[pos]:"guess"})},
+      `Is a[${pos}] = ${a[pos]} the target?`, "cmp", "");
+    if(a[pos]===t){ R.push({found:pos, out:outside(n,lo,hi)}, `Found ${t} at index ${pos}.`, "hit", ""); return; }
+    if(a[pos]<t){ R.push({win:[pos+1,hi], out:outside(n,pos+1,hi), ptrs:ptr(pos+1,hi)}, `Guess was too low — search right of ${pos}.`, "right", ""); lo=pos+1; }
+    else { R.push({win:[lo,pos-1], out:outside(n,lo,pos-1), ptrs:ptr(lo,pos-1)}, `Guess was too high — search left of ${pos}.`, "left", ""); hi=pos-1; }
+  }
+  R.push({out:range(0,n-1), fail:true}, `${t} falls outside the remaining range, so it is not present.`, "miss", "");
+}
+
+const RUN = {bubble, selection, insertion, merge:mergeSortR, quick:quickSortR, heap:heapSortR,
+             shell:shellSortR, counting:countingSortR,
+             linear:linearSearch, binary:binarySearch, jump:jumpSearch, interpolation:interpolationSearch};
+</script>
+<script>
+/* ============================ state ============================ */
+const $ = id => document.getElementById(id);
+const S = {key:"bubble", base:[], frames:[], i:0, playing:false, timer:null,
+           size:22, speed:7, target:0, lang:"python", tab:"how", custom:null,
+           sel:null, explain:false, lastWhy:""};
+const def = () => ALGOS[S.key];
+const isSearch = () => def().kind === "search";
+const QUICK = ["python","java","cpp","c","javascript"];
+const GROUPS = [
+  ["Most used", ["python","java","c","cpp","javascript"]],
+  ["Compiled & systems", ["csharp","go","rust","kotlin","swift","dart"]],
+  ["Web & scripting", ["typescript","php","ruby","perl","lua","bash"]],
+  ["Academic & data", ["scala","julia","r","matlab","pascal","fortran","vb"]],
+  ["Plain", ["pseudo"]]
+];
+
+/* ============================ data ============================ */
+function shuffleArr(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function makeArray(){
+  const n = isSearch() ? Math.min(S.size, 20) : S.size;
+  let a;
+  if(S.custom && S.custom.length > 1) a = S.custom.slice(0, isSearch() ? 24 : 70);
+  else if(isSearch()){
+    a = []; let v = Math.floor(Math.random()*8) + 2;
+    for(let i=0;i<n;i++){ a.push(v); v += Math.floor(Math.random()*11) + 2; }
+    if(!def().sorted) a = shuffleArr(a);
+  } else { a = []; for(let i=0;i<n;i++) a.push(Math.floor(Math.random()*95) + 5); }
+  if(isSearch() && def().sorted) a = a.slice().sort((x,y) => x-y);
+  S.base = a;
+  S.target = a[Math.floor(Math.random()*a.length)];
+  $("targetIn").value = S.target;
+}
+function build(){
+  const R = Rec(S.base.slice());
+  try { isSearch() ? RUN[S.key](R, S.target) : RUN[S.key](R); }
+  catch(e){ R.push({}, "Could not record this run.", null, ""); }
+  if(!R.frames.length) R.push({}, "Nothing to do.", null, "");
+  S.frames = R.frames; S.i = 0; S.sel = null; S.lastWhy = "";
+  $("scrub").max = S.frames.length - 1; $("scrub").value = 0;
+  mount(); paint();
+}
+
+/* ============================ visualiser ============================ */
+let mountedMode = "", mountedLen = -1, nodes = [];
+function mount(){
+  const mode = isSearch() ? "cell" : "bar", n = S.base.length, viz = $("viz"), marks = $("marks");
+  if(mode === mountedMode && n === mountedLen) return;
+  mountedMode = mode; mountedLen = n; nodes = []; viz.innerHTML = ""; marks.innerHTML = "";
+  viz.className = mode === "bar" ? "viz" : "cells";
+  marks.style.display = mode === "bar" ? "" : "none";
+  for(let i=0;i<n;i++){
+    if(mode === "bar"){
+      const b = document.createElement("div"); b.className = "bar"; b.dataset.i = i;
+      const v = document.createElement("span"); v.className = "v"; b.appendChild(v);
+      b.onclick = () => inspect(i);
+      viz.appendChild(b);
+      const m = document.createElement("span"); marks.appendChild(m);
+      nodes.push({el:b, val:v, mark:m});
+    } else {
+      const c = document.createElement("div"); c.className = "cell"; c.dataset.i = i;
+      const p = document.createElement("div"); p.className = "ptr";
+      const box = document.createElement("div"); box.className = "box";
+      const ix = document.createElement("div"); ix.className = "ix"; ix.textContent = i;
+      c.append(p, box, ix); c.onclick = () => inspect(i);
+      viz.appendChild(c); nodes.push({el:c, ptr:p, box:box});
+    }
+  }
+}
+function roleOf(i, hl){
+  const has = (k) => (hl[k]||[]).indexOf(i) >= 0;
+  if(hl.found === i) return ["found", "the match"];
+  if(has("swp")) return ["swap", "being written or swapped"];
+  if(has("cmp")) return ["compare", "being compared right now"];
+  if(hl.pivot === i) return ["pivot", "the pivot for this range"];
+  if(hl.key === i) return ["key", "held aside as the key"];
+  if(has("locked")) return ["locked", "locked in its final position"];
+  if(has("out")) return ["out", "ruled out — it can no longer hold the answer"];
+  if(hl.win && i >= hl.win[0] && i <= hl.win[1]) return ["win", "inside the range still being worked on"];
+  return ["", "waiting its turn"];
+}
+function paint(){
+  const f = S.frames[S.i]; if(!f) return;
+  const hl = f.hl, a = f.a, n = a.length;
+  if(mountedMode === "bar"){
+    const max = Math.max(...a, 1), showV = n <= 28, showM = n <= 30;
+    for(let i=0;i<n;i++){
+      const nd = nodes[i]; if(!nd) continue;
+      nd.el.style.height = (9 + 87 * a[i] / max) + "%";
+      const [role] = roleOf(i, hl);
+      nd.el.className = "bar" + (role ? " " + role : "") + (S.sel === i ? " sel" : "");
+      nd.val.textContent = showV ? a[i] : "";
+      let m = "";
+      if(showM){
+        if(hl.pivot === i) m = "pivot";
+        else if(hl.key === i) m = "key";
+        else if((hl.swp||[]).indexOf(i) >= 0) m = "●";
+        else if((hl.cmp||[]).indexOf(i) >= 0) m = "▲";
+      }
+      nd.mark.textContent = m;
+    }
+  } else {
+    for(let i=0;i<n;i++){
+      const nd = nodes[i]; if(!nd) continue;
+      nd.box.textContent = a[i];
+      const [role] = roleOf(i, hl);
+      nd.el.className = "cell" + (role ? " " + role : "") + (S.sel === i ? " sel" : "");
+      nd.ptr.textContent = (hl.ptrs && hl.ptrs[i]) || "";
+    }
+  }
+  $("narration").textContent = f.note;
+  const why = $("why");
+  if(f.why) S.lastWhy = f.why;
+  const shown = f.why || (S.explain ? S.lastWhy : "");
+  if(shown){ why.hidden = false; why.innerHTML = "<b>Why:</b> " + shown; } else why.hidden = true;
+  $("stComp").textContent = f.st.comparisons;
+  $("stSwap").textContent = f.st.swaps;
+  $("stAcc").textContent = f.st.accesses;
+  $("stStep").textContent = (S.i + 1) + " / " + S.frames.length;
+  $("scrub").value = S.i;
+  $("prevBtn").disabled = S.i === 0;
+  $("nextBtn").disabled = S.i >= S.frames.length - 1;
+  liveLine(f.ln);
+  if(S.sel !== null) inspect(S.sel, true);
+}
+function inspect(i, quiet){
+  const f = S.frames[S.i]; if(!f) return;
+  S.sel = i;
+  const [role, words] = roleOf(i, f.hl);
+  const val = f.a[i];
+  let extra = "";
+  if(role === "locked") extra = " Nothing will move it again.";
+  else if(role === "out") extra = " The algorithm has proved the target cannot be here, so it will never look at it again.";
+  else if(role === "pivot") extra = " Everything smaller will end up to its left, everything larger to its right.";
+  else if(role === "key") extra = " Its slot is free, so the values on its left can slide right.";
+  else if(role === "compare") extra = " That comparison is the highlighted line of code.";
+  $("inspectText").innerHTML = "<b>Index " + i + ", value " + val + "</b> — " + words + "." + extra;
+  $("inspect").hidden = false;
+  if(!quiet) paint();
+}
+
+/* ============================ code panel ============================ */
+const codeCache = {};
+function codeLines(){
+  const k = S.key + "|" + S.lang;
+  if(!codeCache[k]) codeCache[k] = generate(S.key, S.lang);
+  return codeCache[k];
+}
+const KW = ("abstract allocate and auto begin bool boolean break byte call case catch char class const contains continue " +
+"def define deallocate delete dim do double downto elif else elseif end enum exit extends false final finally float fn for " +
+"foreach form from func function global if implicit import in include int integer interface is let local logical long loop " +
+"make module my new next nil nil not null nullptr or package print printf println private procedure program public recursive " +
+"result return self short signed sizeof static step stride str string struct sub subroutine switch template then this throw " +
+"to true try type typedef unsigned until use using val var vector void while with").split(" ");
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+const rxCache = {};
+function hiRx(){
+  if(rxCache[S.lang]) return rxCache[S.lang];
+  // every comment we generate sits on its own line, so anchoring at the
+  // line start keeps "!=", "i--" and "%d" from being eaten as comments
+  const c = LANG[S.lang].cmt.replace(/[.*+?^${}()|[\]\\\/]/g, "\\$&");
+  rxCache[S.lang] = new RegExp("(^\\s*" + c + "[^\\n]*)|(\"(?:\\\\.|[^\"\\\\])*\")|\\b(\\d+)\\b|\\b(" + KW.join("|") + ")\\b", "g");
+  return rxCache[S.lang];
+}
+function hi(src){
+  return esc(src).replace(hiRx(), (m,c,s,num,kw) =>
+    c ? '<span class="tok-com">' + c + '</span>' :
+    s ? '<span class="tok-str">' + s + '</span>' :
+    num ? '<span class="tok-num">' + num + '</span>' :
+    '<span class="tok-kw">' + kw + '</span>');
+}
+function renderCode(){
+  const lines = codeLines(), body = $("codeBody");
+  body.innerHTML = lines.map((l, ix) =>
+    '<div class="cl' + (l.id ? " clickable" : "") + '" data-id="' + (l.id||"") + '" data-ix="' + ix + '">' +
+    '<span class="no">' + (ix+1) + '</span><span>' + (l.t ? hi(l.t) : "") + '</span></div>').join("");
+  body.querySelectorAll(".cl.clickable").forEach(el => el.onclick = () => jumpToLine(el.dataset.id));
+  const P = LANG[S.lang];
+  $("codeFoot").textContent = P.label + " · " + lines.length + " lines · complete, runnable program";
+  liveLine((S.frames[S.i]||{}).ln);
+}
+function liveLine(id){
+  const body = $("codeBody");
+  let first = null;
+  body.querySelectorAll(".cl").forEach(el => {
+    const on = id && el.dataset.id === id;
+    el.classList.toggle("live", !!on);
+    if(on && !first) first = el;
+  });
+  if(first){
+    const h = body.clientHeight;
+    const top = first.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop;
+    if(top < body.scrollTop + 24 || top > body.scrollTop + h - 40)
+      body.scrollTo({top: Math.max(0, top - h/2), behavior:"smooth"});
+  }
+}
+function jumpToLine(id){
+  if(!id) return;
+  for(let k = S.i + 1; k < S.frames.length; k++) if(S.frames[k].ln === id){ pause(); S.i = k; paint(); return; }
+  for(let k = 0; k <= S.i; k++) if(S.frames[k].ln === id){ pause(); S.i = k; paint(); return; }
+}
+function buildLangUI(){
+  $("quickLangs").innerHTML = QUICK.map(l =>
+    '<button class="chip" data-l="' + l + '" aria-pressed="' + (S.lang===l) + '">' + LANG[l].label + '</button>').join("");
+  $("quickLangs").querySelectorAll(".chip").forEach(c => c.onclick = () => setLang(c.dataset.l));
+  $("langSel").innerHTML = GROUPS.map(([g, ls]) =>
+    '<optgroup label="' + g + '">' + ls.map(l =>
+      '<option value="' + l + '"' + (S.lang===l ? " selected" : "") + '>' + LANG[l].label + '</option>').join("") + '</optgroup>').join("");
+  $("langSel").onchange = e => setLang(e.target.value);
+}
+function setLang(l){
+  S.lang = l;
+  $("quickLangs").querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", c.dataset.l === l));
+  $("langSel").value = l;
+  renderCode();
+}
+
+/* ============================ playback ============================ */
+const DELAY = [0,820,600,430,310,220,160,110,78,50,30,17,8];
+function play(){ if(S.i >= S.frames.length - 1) S.i = 0; S.playing = true; $("playBtn").textContent = "Pause"; tick(); }
+function tick(){
+  clearTimeout(S.timer);
+  if(!S.playing) return;
+  if(S.i >= S.frames.length - 1){ pause(); return; }
+  S.i++; paint();
+  S.timer = setTimeout(tick, DELAY[S.explain ? Math.min(S.speed, 3) : S.speed]);
+}
+function pause(){ S.playing = false; clearTimeout(S.timer); $("playBtn").textContent = S.i >= S.frames.length - 1 ? "Replay" : "Play"; }
+
+/* ============================ panels ============================ */
+function renderHead(){
+  const d = def();
+  $("algoName").textContent = d.name;
+  $("algoIdea").textContent = d.idea;
+  const b = ['<span class="badge">best <em>' + d.best + '</em></span>',
+             '<span class="badge">average <em>' + d.avg + '</em></span>',
+             '<span class="badge">worst <em>' + d.worst + '</em></span>',
+             '<span class="badge">extra space <em>' + d.space + '</em></span>'];
+  b.push(d.kind === "sort"
+    ? '<span class="badge ' + (d.stable?"ok":"no") + '">' + (d.stable?"stable":"not stable") + '</span>'
+    : '<span class="badge ' + (d.sorted?"no":"ok") + '">' + (d.sorted?"needs sorted data":"works on unsorted data") + '</span>');
+  b.push('<span class="badge">' + d.method + '</span>');
+  $("badges").innerHTML = b.join("");
+  $("stSwapLabel").textContent = d.move;
+  $("targetField").style.display = d.kind === "search" ? "" : "none";
+}
+function renderPanel(){
+  const d = def(), body = $("panelBody");
+  if(S.tab === "how"){
+    body.innerHTML = '<h3>The idea</h3><p>' + d.idea + '</p>' +
+      '<h3>Step by step</h3><ol class="steps">' + d.steps.map(s => '<li>' + s + '</li>').join("") + '</ol>' +
+      '<h3>Where it wins and where it hurts</h3><div class="grid2">' +
+      '<div class="note"><h4>Strengths</h4><ul>' + d.pros.map(p => '<li>' + p + '</li>').join("") + '</ul></div>' +
+      '<div class="note"><h4>Weaknesses</h4><ul>' + d.cons.map(p => '<li>' + p + '</li>').join("") + '</ul></div></div>' +
+      '<h3>Used in practice for</h3><p>' + d.uses + '</p>';
+  } else if(S.tab === "cx"){
+    const keys = d.kind === "sort" ? SORTS : SEARCHES;
+    const rows = keys.map(k => { const x = ALGOS[k];
+      return '<tr class="' + (k===S.key?"me":"") + '"><td>' + x.name + '</td><td class="mono">' + x.best +
+        '</td><td class="mono">' + x.avg + '</td><td class="mono">' + x.worst + '</td><td class="mono">' + x.space +
+        '</td><td>' + (x.kind==="sort" ? (x.stable?"Yes":"No") : (x.sorted?"Sorted only":"Any order")) + '</td></tr>'; }).join("");
+    body.innerHTML = '<h3>' + (d.kind==="sort"?"Sorting":"Searching") + ' algorithms side by side</h3>' +
+      '<p>Your current pick is highlighted. n is the number of items; k is the range of values.</p>' +
+      '<div style="overflow-x:auto"><table><thead><tr><th>Algorithm</th><th class="mono">Best</th><th class="mono">Average</th>' +
+      '<th class="mono">Worst</th><th class="mono">Extra space</th><th>' + (d.kind==="sort"?"Stable":"Input") + '</th></tr></thead><tbody>' +
+      rows + '</tbody></table></div>' +
+      '<h3>Reading these numbers</h3><p>Big-O describes how the work grows with n, ignoring constants. O(n²) means ten times the data is a hundred times the work. O(n log n) barely notices: a million items need about twenty million steps rather than a million million.</p>' +
+      '<p>Stability matters when two items compare equal. A stable sort keeps them in their original order, which is what lets you sort by marks and then by name and have both orders survive.</p>';
+  } else renderQuiz();
+}
+
+/* ============================ quiz ============================ */
+const CXPOOL = ["O(1)","O(log n)","O(√n)","O(n)","O(n log n)","O(n²)","O(n + k)","O(log log n)","O(n^1.25)"];
+function pick(arr,n){ const c = arr.slice(), o = []; while(o.length < n && c.length) o.push(c.splice(Math.floor(Math.random()*c.length),1)[0]); return o; }
+function makeQuestions(){
+  const qs = [];
+  [...pick(SORTS,2), ...pick(SEARCHES,1)].forEach(k => {
+    const d = ALGOS[k], worst = Math.random() < 0.5;
+    const ans = worst ? d.worst : d.avg;
+    qs.push({q:"What is the " + (worst?"worst":"average") + "-case time complexity of " + d.name.toLowerCase() + "?",
+      ans, opts:shuffleArr([ans, ...pick(CXPOOL.filter(x=>x!==ans),3)]),
+      why:d.name + ": best " + d.best + ", average " + d.avg + ", worst " + d.worst + "."});
+  });
+  const st = pick(SORTS.filter(k => ALGOS[k].stable),1)[0];
+  qs.push({q:"Which of these sorting algorithms is stable — equal items keep their original order?", ans:ALGOS[st].name,
+    opts:shuffleArr([ALGOS[st].name, ...pick(SORTS.filter(k=>!ALGOS[k].stable),3).map(k=>ALGOS[k].name)]),
+    why:ALGOS[st].name + " is stable. Selection, quick, heap and shell sort are not, because they swap items across long distances."});
+  qs.push({q:"Which search only works if the array is already sorted?", ans:"Binary search",
+    opts:shuffleArr(["Binary search","Linear search","Counting the items first","Searching a linked list"]),
+    why:"Binary, jump and interpolation search all rely on order. Linear search is the only one that works on unsorted data."});
+  const sp = pick(SORTS,1)[0];
+  qs.push({q:"How much extra memory does " + ALGOS[sp].name.toLowerCase() + " need?", ans:ALGOS[sp].space,
+    opts:shuffleArr([ALGOS[sp].space, ...pick(["O(1)","O(log n)","O(n)","O(n + k)","O(n²)"].filter(x=>x!==ALGOS[sp].space),3)]),
+    why:ALGOS[sp].name + " uses " + ALGOS[sp].space + " extra space. In-place sorts are O(1); merge sort needs a second array; quicksort pays only for its recursion stack."});
+  qs.push({q:"A sorted array of 1,000,000 items. Roughly how many comparisons does binary search need at worst?", ans:"About 20",
+    opts:shuffleArr(["About 20","About 1,000","About 500,000","About 1,000,000"]),
+    why:"log₂(1,000,000) ≈ 20. Each comparison throws away half of what is left."});
+  return shuffleArr(qs).slice(0,6);
+}
+let QZ = null, answered = 0, correct = 0;
+function renderQuiz(){
+  if(!QZ){ QZ = makeQuestions(); answered = 0; correct = 0; }
+  $("panelBody").innerHTML = '<h3>Test yourself</h3><p>Six questions drawn from every algorithm in the lab, not just the one on screen.</p>' +
+    '<div class="quiz">' + QZ.map((q,i) => '<div class="q" data-q="' + i + '"><p>' + (i+1) + '. ' + q.q + '</p><div class="opts">' +
+      q.opts.map(o => '<button class="opt" data-opt="' + esc(String(o)) + '">' + o + '</button>').join("") +
+      '</div><p class="verdict" hidden></p></div>').join("") + '</div>' +
+    '<p style="margin-top:16px;font-family:var(--mono);font-size:14px" id="score"></p><button class="btn" id="newQ">New questions</button>';
+  $("panelBody").querySelectorAll(".q").forEach(qd => {
+    const q = QZ[+qd.dataset.q];
+    qd.querySelectorAll(".opt").forEach(btn => btn.onclick = () => {
+      qd.querySelectorAll(".opt").forEach(b => { b.disabled = true; if(b.dataset.opt === String(q.ans)) b.classList.add("right"); });
+      const ok = btn.dataset.opt === String(q.ans);
+      if(!ok) btn.classList.add("wrong");
+      answered++; if(ok) correct++;
+      const v = qd.querySelector(".verdict");
+      v.hidden = false; v.textContent = (ok ? "Correct. " : "Not quite. ") + q.why;
+      $("score").textContent = "Score: " + correct + " of " + answered + " answered";
+    });
+  });
+  $("newQ").onclick = () => { QZ = null; renderQuiz(); };
+}
+
+/* ============================ wiring ============================ */
+function buildRail(){
+  const fill = (id, keys) => {
+    $(id).innerHTML = keys.map(k => '<button class="algo-btn" data-key="' + k + '" aria-current="' + (k===S.key) + '"><b>' +
+      ALGOS[k].name + '</b><i>' + ALGOS[k].avg + '</i></button>').join("");
+    $(id).querySelectorAll(".algo-btn").forEach(b => b.onclick = () => select(b.dataset.key));
+  };
+  fill("listSort", SORTS); fill("listSearch", SEARCHES);
+}
+function needsResort(){
+  if(!def().sorted) return false;
+  for(let i=1;i<S.base.length;i++) if(S.base[i] < S.base[i-1]) return true;
+  return false;
+}
+function select(k){
+  const wasSearch = isSearch();
+  S.key = k; pause();
+  document.querySelectorAll(".algo-btn").forEach(b => b.setAttribute("aria-current", b.dataset.key === k));
+  renderHead();
+  if(wasSearch !== isSearch()) makeArray();
+  else if(isSearch()){
+    if(needsResort()) S.base = S.base.slice().sort((x,y) => x-y);
+    S.target = +$("targetIn").value || S.base[0];
+  }
+  $("inspect").hidden = true; S.sel = null;
+  build(); renderCode(); renderPanel();
+}
+function boot(){
+  buildRail(); buildLangUI(); renderHead(); makeArray(); build(); renderCode(); renderPanel();
+  $("playBtn").onclick = () => S.playing ? pause() : play();
+  $("nextBtn").onclick = () => { pause(); if(S.i < S.frames.length-1){ S.i++; paint(); } };
+  $("prevBtn").onclick = () => { pause(); if(S.i > 0){ S.i--; paint(); } };
+  $("resetBtn").onclick = () => { pause(); S.i = 0; paint(); };
+  $("explainBtn").onclick = () => {
+    S.explain = !S.explain;
+    $("explainBtn").classList.toggle("on", S.explain);
+    $("explainBtn").textContent = S.explain ? "Explain mode on" : "Explain mode";
+    paint();
+  };
+  $("shuffleBtn").onclick = () => { pause(); S.custom = null; $("customIn").value = ""; makeArray(); build(); };
+  $("scrub").oninput = e => { pause(); S.i = +e.target.value; paint(); };
+  $("sizeR").oninput = e => { S.size = +e.target.value; $("sizeV").textContent = S.size; pause(); S.custom = null; makeArray(); build(); };
+  $("speedR").oninput = e => { S.speed = +e.target.value; if(S.playing) tick(); };
+  $("targetIn").onchange = () => { S.target = +$("targetIn").value; pause(); build(); };
+  $("applyCustom").onclick = () => {
+    const nums = ($("customIn").value.match(/-?\d+/g)||[]).map(Number).filter(v => v>=1 && v<=999);
+    if(nums.length < 2){ $("narration").textContent = "Give at least two numbers between 1 and 999, separated by commas or spaces."; return; }
+    S.custom = nums; pause(); makeArray(); build();
+  };
+  $("inspectClose").onclick = () => { $("inspect").hidden = true; S.sel = null; paint(); };
+  $("copyBtn").onclick = async e => {
+    const text = codeLines().map(l => l.t).join("\n");
+    try { await navigator.clipboard.writeText(text); e.target.textContent = "Copied"; setTimeout(() => e.target.textContent = "Copy", 1400); }
+    catch(err){ e.target.textContent = "Ctrl+C"; }
+  };
+  $("filter").oninput = e => {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll(".algo-btn").forEach(b =>
+      b.style.display = ALGOS[b.dataset.key].name.toLowerCase().includes(q) ? "" : "none");
+  };
+  document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
+    S.tab = t.dataset.tab;
+    document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", x === t));
+    renderPanel();
+  });
+  $("themeBtn").onclick = () => {
+    const dark = document.documentElement.getAttribute("data-theme") !== "light";
+    document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
+    $("themeBtn").textContent = dark ? "Dark mode" : "Light mode";
+  };
+  document.addEventListener("keydown", e => {
+    if(/^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(e.target.tagName)) return;
+    if(e.code === "Space"){ e.preventDefault(); S.playing ? pause() : play(); }
+    else if(e.key === "ArrowRight"){ e.preventDefault(); $("nextBtn").click(); }
+    else if(e.key === "ArrowLeft"){ e.preventDefault(); $("prevBtn").click(); }
+  });
+}
+boot();
+</script>
+</body>
+</html>
